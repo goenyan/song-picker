@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Song Picker</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%237c5cff'/%3E%3Cstop offset='55%25' stop-color='%23ff5cad'/%3E%3Cstop offset='100%25' stop-color='%235cd6ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%230b0a12'/%3E%3Ccircle cx='32' cy='32' r='24' fill='url(%23g)'/%3E%3Cpath d='M26 21 L45 32 L26 43 Z' fill='%230b0a12'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -44,13 +45,43 @@
   .glow.b{background:var(--accent-2); bottom:-25%; right:-10%;}
   .glow.c{background:var(--accent-3); top:30%; right:20%; width:35vw;height:35vw; opacity:.18;}
 
+  /* Ambient cursor-follow light — subtle, premium "studio lighting" feel */
+  .cursor-glow{
+    position:fixed;
+    top:0;left:0;
+    width:520px;height:520px;
+    margin-left:-260px;margin-top:-260px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,.10) 0%, rgba(124,92,255,.07) 35%, transparent 70%);
+    pointer-events:none;
+    z-index:1;
+    opacity:0;
+    transition:opacity .4s ease;
+    will-change:transform;
+    mix-blend-mode:screen;
+  }
+  .cursor-glow.active{opacity:1;}
+
   header{
     position:relative;z-index:2;
     text-align:center;
     padding: 64px 24px 24px;
   }
   header .kicker{
+    display:flex;align-items:center;justify-content:center;gap:10px;
     font-size:13px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;
+  }
+  header .kicker-mark{
+    width:6px;height:6px;
+    background:linear-gradient(135deg, var(--accent-3), var(--accent-2));
+    transform:rotate(45deg);
+    border-radius:1px;
+    box-shadow:0 0 12px rgba(124,92,255,.7);
+    animation:markPulse 3s ease-in-out infinite;
+  }
+  @keyframes markPulse{
+    0%,100%{opacity:.6; transform:rotate(45deg) scale(1);}
+    50%{opacity:1; transform:rotate(45deg) scale(1.3);}
   }
   header h1{
     font-family:'Space Grotesk', sans-serif;
@@ -109,7 +140,7 @@
     border-radius:22px;
     background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.015));
     border:1px solid rgba(255,255,255,.08);
-    box-shadow: 0 30px 60px -20px rgba(0,0,0,.6);
+    box-shadow: 0 20px 44px -18px rgba(0,0,0,.55), 0 1px 0 0 rgba(255,255,255,.05) inset;
     transform-style: preserve-3d;
     transition: box-shadow .3s ease;
     padding:14px;
@@ -139,6 +170,84 @@
     pointer-events:none;
   }
   .card:hover .sheen{transform:translateX(120%);}
+  .card .gloss{
+    position:absolute;inset:0;
+    background:radial-gradient(circle 140px at var(--mx,50%) var(--my,50%), rgba(255,255,255,.28), transparent 60%);
+    opacity:0;
+    transition:opacity .35s ease;
+    pointer-events:none;
+    mix-blend-mode:overlay;
+  }
+  .card:hover .gloss{opacity:1;}
+  .card .cover-preview{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    border:0;
+    opacity:0;
+    transition:opacity .5s ease;
+    pointer-events:none;
+    background:#000;
+  }
+  .card .cover-preview.ready{opacity:1;}
+  .card .mute-btn{
+    position:absolute;
+    bottom:12px;left:12px;
+    width:34px;height:34px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.2);
+    background:rgba(10,10,20,.55);
+    backdrop-filter:blur(8px);
+    color:#fff;
+    font-size:13px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    z-index:3;
+    opacity:0;
+    transform:scale(.8);
+    transition:all .25s ease;
+  }
+  .card.previewing .mute-btn{opacity:1;transform:scale(1);}
+  .mute-btn:hover{background:rgba(255,255,255,.18);}
+  .card .preview-dot{
+    position:absolute;
+    top:12px;left:12px;
+    display:flex;align-items:center;gap:6px;
+    padding:5px 10px 5px 8px;
+    border-radius:100px;
+    background:rgba(10,10,20,.55);
+    backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.15);
+    font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text);
+    z-index:3;
+    opacity:0;
+    transform:translateY(-4px);
+    transition:all .25s ease;
+  }
+  .card.previewing .preview-dot{opacity:1;transform:translateY(0);}
+  .preview-dot i{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--accent-2);
+    box-shadow:0 0 8px var(--accent-2);
+    animation:dotPulse 1.1s ease-in-out infinite;
+  }
+  @keyframes dotPulse{
+    0%,100%{opacity:.5;transform:scale(.85);}
+    50%{opacity:1;transform:scale(1.15);}
+  }
+  .card::before{
+    content:'';
+    position:absolute;inset:-1px;
+    border-radius:23px;
+    padding:1px;
+    background:linear-gradient(135deg, rgba(255,255,255,.35), rgba(255,255,255,0) 30%, rgba(255,255,255,0) 70%, rgba(255,255,255,.18));
+    -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite:xor;
+    mask-composite:exclude;
+    opacity:.6;
+    transition:opacity .3s ease;
+    pointer-events:none;
+  }
+  .card:hover::before{opacity:1;}
   .card .meta{
     margin-top:14px;
     padding: 0 4px;
@@ -301,7 +410,7 @@
   }
   .card.active .badge{opacity:1;transform:scale(1);}
   .card.active{
-    box-shadow: 0 40px 80px -20px rgba(124,92,255,.55), 0 0 0 1px rgba(255,255,255,.18);
+    box-shadow: 0 22px 46px -16px rgba(124,92,255,.55), 0 0 0 1px rgba(255,255,255,.18);
   }
   .card.winner{
     animation: pulseWin 1.1s ease;
@@ -309,18 +418,9 @@
   @keyframes pulseWin{
     0%{box-shadow:0 0 0 0 rgba(124,92,255,.7);}
     60%{box-shadow:0 0 0 24px rgba(124,92,255,0);}
-    100%{box-shadow: 0 40px 80px -20px rgba(124,92,255,.55);}
+    100%{box-shadow: 0 22px 46px -16px rgba(124,92,255,.55);}
   }
 
-  .indicator{
-    position:absolute;
-    top:0;bottom:0;left:50%;
-    width:2px;
-    transform:translateX(-50%);
-    background:linear-gradient(to bottom, transparent, rgba(255,255,255,.25), transparent);
-    z-index:1;
-    pointer-events:none;
-  }
 
   .controls{
     position:relative;z-index:2;
@@ -345,6 +445,15 @@
   .pick-btn:hover{transform:translateY(-2px) scale(1.02); box-shadow:0 26px 50px -10px rgba(124,92,255,.7);}
   .pick-btn:active{transform:translateY(0) scale(.98);}
   .pick-btn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+  .pick-btn::after{
+    content:'';
+    position:absolute;inset:0;
+    background:linear-gradient(120deg, transparent 30%, rgba(255,255,255,.55) 48%, transparent 66%);
+    transform:translateX(-140%);
+    transition:transform .7s ease;
+    pointer-events:none;
+  }
+  .pick-btn:hover::after{transform:translateX(140%);}
 
   .now-picked{
     text-align:center;
@@ -714,15 +823,15 @@
   <div class="glow b"></div>
   <div class="glow c"></div>
   <div class="noise"></div>
+  <div class="cursor-glow" id="cursorGlow"></div>
 
   <header>
-    <div class="kicker">Song Selector</div>
+    <div class="kicker"><span class="kicker-mark"></span>Song Selector</div>
     <h1>Spin the Slide,<br/>Pick the Track</h1>
-    <p>Drag, scroll, or hit the button. A 3D horizontal reel that lands on your next song.</p>
+    <p>Drag, scroll, or hit the button.</p>
   </header>
 
   <section class="stage">
-    <div class="indicator"></div>
     <div class="track-wrap" id="trackWrap">
       <div class="track" id="track"></div>
     </div>
@@ -831,14 +940,44 @@ const nowPicked = document.getElementById('nowPicked');
 
 let cards = [];
 
+// Inline auto-preview state (which card is showing a live preview, if any)
+let previewIframe = null;
+let previewCardIndex = null;
+let previewSettleTimer = null;
+let previewMuted = true;
+
+// Browsers block unmuted autoplay until the person has actually clicked/tapped
+// on the page. Once that happens, unmute future previews automatically so the
+// person doesn't have to hit the speaker icon on every single card.
+let audioUnlocked = false;
+function unlockPreviewAudio(){
+  if(audioUnlocked) return;
+  audioUnlocked = true;
+  previewMuted = false;
+  document.removeEventListener('click', unlockPreviewAudio);
+  document.removeEventListener('touchend', unlockPreviewAudio);
+  document.removeEventListener('keydown', unlockPreviewAudio);
+  if(previewCardIndex !== null){
+    const idx = previewCardIndex;
+    previewCardIndex = null; // force startInlinePreview to rebuild with sound
+    startInlinePreview(idx);
+  }
+}
+document.addEventListener('click', unlockPreviewAudio);
+document.addEventListener('touchend', unlockPreviewAudio);
+document.addEventListener('keydown', unlockPreviewAudio);
+
 function buildCard(s, i){
   const card = document.createElement('div');
   card.className = 'card';
   card.dataset.index = i;
   card.innerHTML = `
     <div class="cover">
-      <img src="${s.cover}" alt="${s.title} cover" loading="lazy">
+      <img src="${s.cover}" alt="${s.title} cover" loading="lazy" onerror="ytThumbFallback(this, '${s.youtubeId}')">
       <div class="sheen"></div>
+      <div class="gloss"></div>
+      <div class="preview-dot"><i></i>Preview</div>
+      <button class="mute-btn" data-role="mute" aria-label="Toggle sound">🔇</button>
       <button class="play-btn" data-yt="${s.youtubeId}" aria-label="Play preview">▶</button>
       <button class="remove-song-btn" data-song-index="${i}" aria-label="Remove song">✕</button>
     </div>
@@ -852,6 +991,8 @@ function buildCard(s, i){
 }
 
 function renderAllCards(){
+  clearTimeout(previewSettleTimer);
+  stopInlinePreview();
   track.innerHTML = '';
   if(SONGS.length === 0){
     const empty = document.createElement('div');
@@ -889,7 +1030,62 @@ function saveLibrary(){
   localStorage.setItem(SONGS_STORAGE_KEY, JSON.stringify(SONGS));
 }
 
+// hqdefault.jpg 404s for some videos (older/vertical uploads don't have it).
+// Step down through smaller sizes, then fall back to a drawn placeholder.
+const THUMB_PLACEHOLDER = 'data:image/svg+xml,' + encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
+    <rect width="200" height="200" fill="#171425"/>
+    <circle cx="100" cy="100" r="34" fill="none" stroke="#4a4470" stroke-width="3"/>
+    <path d="M92 84 L118 100 L92 116 Z" fill="#4a4470"/>
+  </svg>`);
+function ytThumbFallback(el, videoId){
+  const chain = [
+    `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+    `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+    `https://i.ytimg.com/vi/${videoId}/default.jpg`,
+    THUMB_PLACEHOLDER
+  ];
+  const next = Number(el.dataset.thumbAttempt || 0) + 1;
+  if(next < chain.length){
+    el.dataset.thumbAttempt = next;
+    el.src = chain[next];
+  } else {
+    el.onerror = null;
+  }
+}
+
 renderAllCards();
+
+// --- Premium ambient effects: cursor glow + glossy card highlight ---
+const cursorGlow = document.getElementById('cursorGlow');
+let glowX = 0, glowY = 0, glowShown = false;
+if(cursorGlow && !window.matchMedia('(pointer: coarse)').matches){
+  window.addEventListener('pointermove', (e)=>{
+    glowX = e.clientX; glowY = e.clientY;
+    cursorGlow.style.transform = `translate(${glowX}px, ${glowY}px)`;
+    if(!glowShown){ cursorGlow.classList.add('active'); glowShown = true; }
+  }, { passive:true });
+  document.addEventListener('pointerleave', ()=> cursorGlow.classList.remove('active'));
+
+  track.addEventListener('pointermove', (e)=>{
+    const card = e.target.closest('.card');
+    if(!card) return;
+    const rect = card.getBoundingClientRect();
+    card.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+    card.style.setProperty('--my', `${e.clientY - rect.top}px`);
+  }, { passive:true });
+}
+
+// Magnetic hover for the primary pick button — leans gently toward the cursor
+if(pickBtn && !window.matchMedia('(pointer: coarse)').matches){
+  pickBtn.addEventListener('pointermove', (e)=>{
+    const r = pickBtn.getBoundingClientRect();
+    const dx = (e.clientX - (r.left + r.width/2)) * 0.12;
+    const dy = (e.clientY - (r.top + r.height/2)) * 0.18;
+    pickBtn.style.transform = `translate(${dx}px, ${dy}px) translateY(-2px) scale(1.02)`;
+  });
+  pickBtn.addEventListener('pointerleave', ()=>{ pickBtn.style.transform = ''; });
+}
 
 // --- Merge imported songs from Playlist Extractor ---
 function mergeImportedSongs(imported){
@@ -944,9 +1140,54 @@ function updateCards(){
     if(s){
       nowPicked.innerHTML = `Active: <b>${s.title}</b> — ${s.artist}`;
     }
+    clearTimeout(previewSettleTimer);
+    stopInlinePreview();
+    // Wait for the reel to settle on this card before starting a preview,
+    // so flicking past several songs doesn't spin up a video for each one.
+    previewSettleTimer = setTimeout(()=>{ startInlinePreview(activeIndex); }, 600);
   } else {
     activeIndex = closestIdx;
   }
+}
+
+function startInlinePreview(index){
+  const song = SONGS[index];
+  const card = cards[index];
+  if(!song || !card) return;
+  if(previewCardIndex === index) return;
+  stopInlinePreview();
+
+  const cover = card.querySelector('.cover');
+  if(!cover) return;
+
+  const iframe = document.createElement('iframe');
+  iframe.className = 'cover-preview';
+  iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(song.youtubeId)}?autoplay=1&mute=${previewMuted ? 1 : 0}&rel=0&modestbranding=1&playsinline=1&controls=0&loop=1&playlist=${encodeURIComponent(song.youtubeId)}`;
+  iframe.title = `${song.title} preview`;
+  iframe.setAttribute('allow', 'autoplay; encrypted-media');
+  iframe.setAttribute('frameborder', '0');
+  iframe.addEventListener('load', ()=> iframe.classList.add('ready'));
+
+  cover.appendChild(iframe);
+  card.classList.add('previewing');
+  const muteBtn = card.querySelector('.mute-btn');
+  if(muteBtn) muteBtn.textContent = previewMuted ? '🔇' : '🔊';
+
+  previewIframe = iframe;
+  previewCardIndex = index;
+}
+
+function stopInlinePreview(){
+  if(previewCardIndex !== null){
+    const prevCard = cards[previewCardIndex];
+    if(prevCard) prevCard.classList.remove('previewing');
+  }
+  if(previewIframe){
+    previewIframe.src = 'about:blank';
+    previewIframe.remove();
+  }
+  previewIframe = null;
+  previewCardIndex = null;
 }
 
 let ticking = false;
@@ -1008,6 +1249,8 @@ function announce(card){
 requestAnimationFrame(()=>{
   scrollToCard(cards[0], false);
   updateCards();
+  clearTimeout(previewSettleTimer);
+  previewSettleTimer = setTimeout(()=>{ startInlinePreview(activeIndex); }, 700);
 });
 
 // Pick-for-me: spins through cards then eases to a random winner
@@ -1070,27 +1313,14 @@ const modalFrameWrap = document.getElementById('modalFrameWrap');
 const modalNow = document.getElementById('modalNow');
 const modalClose = document.getElementById('modalClose');
 
-let ytApiReady = false;
-let ytApiLoading = false;
-let currentPlayer = null;
 let fallbackTimer = null;
-
-function loadYouTubeApi(){
-  if(ytApiReady || ytApiLoading) return;
-  ytApiLoading = true;
-  const tag = document.createElement('script');
-  tag.src = 'https://www.youtube.com/iframe_api';
-  document.head.appendChild(tag);
-}
-window.onYouTubeIframeAPIReady = function(){
-  ytApiReady = true;
-};
-loadYouTubeApi();
 
 function showFallback(youtubeId, cover){
   const fb = document.getElementById('modalFallback');
   const thumb = document.getElementById('fallbackThumb');
   const link = document.getElementById('fallbackLink');
+  thumb.dataset.thumbAttempt = '0';
+  thumb.onerror = () => ytThumbFallback(thumb, youtubeId);
   thumb.src = cover || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`;
   link.href = `https://www.youtube.com/watch?v=${youtubeId}`;
   fb.classList.add('show');
@@ -1111,71 +1341,48 @@ function openPreview(youtubeId, title, artist, cover){
   const existingIframe = modalFrameWrap.querySelector('iframe');
   if(existingIframe) existingIframe.remove();
 
-  const playerDiv = document.createElement('div');
-  playerDiv.id = 'ytPlayer-' + Date.now();
-  modalFrameWrap.appendChild(playerDiv);
+  const iframe = document.createElement('iframe');
+  iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(youtubeId)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+  iframe.title = title || 'YouTube video preview';
+  iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; clipboard-write');
+  iframe.setAttribute('allowfullscreen', '');
+  iframe.setAttribute('frameborder', '0');
+  iframe.referrerPolicy = 'strict-origin-when-cross-origin';
 
   clearTimeout(fallbackTimer);
+  // Most YouTube embeds load within a couple seconds; if nothing has
+  // rendered after a while (blocked embed, offline, etc.) show the fallback.
   fallbackTimer = setTimeout(()=>{
     if(modalFrameWrap.classList.contains('loading')){
       showFallback(youtubeId, cover);
     }
-  }, 4500);
+  }, 6000);
 
-  function initPlayer(){
-    try{
-      currentPlayer = new YT.Player(playerDiv.id, {
-        height: '100%',
-        width: '100%',
-        videoId: youtubeId,
-        playerVars: { autoplay: 1, rel: 0 },
-        events: {
-          onReady: () => {
-            modalFrameWrap.classList.remove('loading');
-            clearTimeout(fallbackTimer);
-          },
-          onError: () => {
-            clearTimeout(fallbackTimer);
-            showFallback(youtubeId, cover);
-          }
-        }
-      });
-    }catch(err){
-      clearTimeout(fallbackTimer);
-      showFallback(youtubeId, cover);
-    }
-  }
+  iframe.addEventListener('load', ()=>{
+    modalFrameWrap.classList.remove('loading');
+    clearTimeout(fallbackTimer);
+  });
+  iframe.addEventListener('error', ()=>{
+    clearTimeout(fallbackTimer);
+    showFallback(youtubeId, cover);
+  });
 
-  if(ytApiReady){
-    initPlayer();
-  }else{
-    let tries = 0;
-    const waitApi = setInterval(()=>{
-      tries++;
-      if(ytApiReady){
-        clearInterval(waitApi);
-        initPlayer();
-      } else if(tries > 20){
-        clearInterval(waitApi);
-        showFallback(youtubeId, cover);
-      }
-    }, 250);
-  }
+  modalFrameWrap.appendChild(iframe);
 }
 
 function closePreview(){
   modalOverlay.classList.remove('open');
   clearTimeout(fallbackTimer);
-  if(currentPlayer && currentPlayer.destroy){
-    try{ currentPlayer.destroy(); }catch(e){}
-    currentPlayer = null;
-  }
   const existingIframe = modalFrameWrap.querySelector('iframe');
-  if(existingIframe) existingIframe.remove();
-  const playerDivs = modalFrameWrap.querySelectorAll('div[id^="ytPlayer-"]');
-  playerDivs.forEach(d => d.remove());
+  if(existingIframe){
+    // Clearing src (rather than just removing the node) stops playback/audio immediately.
+    existingIframe.src = 'about:blank';
+    existingIframe.remove();
+  }
   hideFallback();
   modalFrameWrap.classList.remove('loading');
+  clearTimeout(previewSettleTimer);
+  previewSettleTimer = setTimeout(()=>{ startInlinePreview(activeIndex); }, 300);
 }
 
 modalClose.addEventListener('click', closePreview);
@@ -1187,13 +1394,36 @@ document.addEventListener('keydown', (e)=>{
 });
 
 track.addEventListener('click', (e)=>{
+  if(!e.target.closest('.mute-btn')) unlockPreviewAudio();
   const playBtn = e.target.closest('.play-btn');
   if(playBtn){
     e.stopPropagation();
     const card = playBtn.closest('.card');
     const i = card.dataset.index;
     const s = SONGS[i];
+    clearTimeout(previewSettleTimer);
+    stopInlinePreview();
     openPreview(s.youtubeId, s.title, s.artist, s.cover);
+    return;
+  }
+  const muteBtn = e.target.closest('.mute-btn');
+  if(muteBtn){
+    e.stopPropagation();
+    previewMuted = !previewMuted;
+    if(!previewMuted){
+      audioUnlocked = true;
+      document.removeEventListener('click', unlockPreviewAudio);
+      document.removeEventListener('touchend', unlockPreviewAudio);
+      document.removeEventListener('keydown', unlockPreviewAudio);
+    }
+    muteBtn.textContent = previewMuted ? '🔇' : '🔊';
+    // Re-request the embed with the new mute state (simplest reliable way
+    // without wiring up the full postMessage player API for a mini preview).
+    if(previewCardIndex !== null){
+      const idx = previewCardIndex;
+      previewCardIndex = null; // force a fresh start
+      startInlinePreview(idx);
+    }
     return;
   }
   const removeBtn = e.target.closest('.remove-song-btn');
