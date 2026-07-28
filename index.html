@@ -1393,13 +1393,20 @@ function startInlinePreview(index){
   const cover = card.querySelector('.cover');
   if(!cover) return;
 
+  const iframeId = 'yt-inline-' + index + '-' + Date.now();
   const iframe = document.createElement('iframe');
+  iframe.id = iframeId;
   iframe.className = 'cover-preview';
-  iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(song.youtubeId)}?autoplay=1&mute=${previewMuted ? 1 : 0}&rel=0&modestbranding=1&playsinline=1&controls=0&loop=1&playlist=${encodeURIComponent(song.youtubeId)}`;
+  iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(song.youtubeId)}?autoplay=1&mute=${previewMuted ? 1 : 0}&rel=0&modestbranding=1&playsinline=1&controls=0&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
   iframe.title = `${song.title} preview`;
   iframe.setAttribute('allow', 'autoplay; encrypted-media');
   iframe.setAttribute('frameborder', '0');
-  iframe.addEventListener('load', ()=> iframe.classList.add('ready'));
+  iframe.addEventListener('load', ()=>{
+    iframe.classList.add('ready');
+    try{
+      iframe.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: iframeId }), '*');
+    }catch(e){}
+  });
 
   cover.appendChild(iframe);
   card.classList.add('previewing');
@@ -1422,6 +1429,31 @@ function stopInlinePreview(){
   previewIframe = null;
   previewCardIndex = null;
 }
+
+function advanceToNextSong(){
+  if(!cards.length) return;
+  const nextIndex = (activeIndex + 1) % cards.length;
+  scrollToCard(cards[nextIndex], true);
+}
+
+window.addEventListener('message', (event)=>{
+  if(event.origin !== 'https://www.youtube.com') return;
+  if(typeof event.data !== 'string') return;
+  let data;
+  try{ data = JSON.parse(event.data); }catch(e){ return; }
+  if(!data || data.event !== 'infoDelivery' || !data.info || typeof data.info.playerState === 'undefined') return;
+  if(data.info.playerState !== 0) return;
+
+  if(previewIframe && event.source === previewIframe.contentWindow){
+    advanceToNextSong();
+  } else if(typeof modalFrameWrap !== 'undefined'){
+    const modalIframe = modalFrameWrap.querySelector('iframe');
+    if(modalIframe && event.source === modalIframe.contentWindow){
+      closePreview();
+      advanceToNextSong();
+    }
+  }
+});
 
 let ticking = false;
 function onScroll(){
@@ -1570,7 +1602,9 @@ function openPreview(youtubeId, title, artist, cover){
   if(existingIframe) existingIframe.remove();
 
   const iframe = document.createElement('iframe');
-  iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(youtubeId)}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+  const modalIframeId = 'yt-modal-' + Date.now();
+  iframe.id = modalIframeId;
+  iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(youtubeId)}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
   iframe.title = title || 'YouTube video preview';
   iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture; clipboard-write');
   iframe.setAttribute('allowfullscreen', '');
@@ -1587,6 +1621,9 @@ function openPreview(youtubeId, title, artist, cover){
   iframe.addEventListener('load', ()=>{
     modalFrameWrap.classList.remove('loading');
     clearTimeout(fallbackTimer);
+    try{
+      iframe.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: modalIframeId }), '*');
+    }catch(e){}
   });
   iframe.addEventListener('error', ()=>{
     clearTimeout(fallbackTimer);
@@ -1773,7 +1810,7 @@ function extractPlaylistId(input){
     const url = new URL(input);
     const listParam = url.searchParams.get('list');
     if(listParam) return listParam;
-  }catch(e){ /* not a full URL */ }
+  }catch(e){}
   const match = input.match(/list=([a-zA-Z0-9_-]+)/);
   if(match) return match[1];
   return input;
