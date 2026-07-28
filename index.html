@@ -6,14 +6,17 @@
 <title>Song Picker</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%237c5cff'/%3E%3Cstop offset='55%25' stop-color='%23ff5cad'/%3E%3Cstop offset='100%25' stop-color='%235cd6ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%230b0a12'/%3E%3Ccircle cx='32' cy='32' r='24' fill='url(%23g)'/%3E%3Cpath d='M26 21 L45 32 L26 43 Z' fill='%230b0a12'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <style>
   :root{
-    --bg-1:#0a0a12;
-    --bg-2:#12121e;
-    --accent:#7c5cff;
-    --accent-2:#ff5cad;
-    --accent-3:#5cd6ff;
+    --bg-1:#07050e;
+    --bg-2:#0f0a1c;
+    --accent:#8a5cff;
+    --accent-2:#ff2bb0;
+    --accent-3:#2be8ff;
+    --neon-spark:#e6ff2b;
+    --audio-pulse: 0;
     --card-w: 260px;
     --card-h: 340px;
     --text: #f4f2ff;
@@ -22,12 +25,90 @@
   *{box-sizing:border-box;}
   html,body{
     margin:0;padding:0;height:100%;
-    background: radial-gradient(circle at 20% 20%, #1a1230 0%, var(--bg-1) 45%, #05050a 100%);
+    background: radial-gradient(circle at 20% 20%, #1c1030 0%, var(--bg-1) 45%, #020103 100%);
     color:var(--text);
     font-family:'Inter', sans-serif;
     overflow-x:hidden;
     -webkit-font-smoothing:antialiased;
   }
+  #starfield{
+    position:fixed;inset:0;
+    z-index:0;
+    pointer-events:none;
+  }
+  .synth-grid{
+    position:fixed;
+    left:0;right:0;bottom:0;
+    height:46vh;
+    z-index:0;
+    pointer-events:none;
+    overflow:hidden;
+    perspective:300px;
+    -webkit-mask-image:linear-gradient(to top, black 0%, black 35%, transparent 92%);
+    mask-image:linear-gradient(to top, black 0%, black 35%, transparent 92%);
+    opacity:calc(.5 + var(--audio-pulse, 0) * 0.3);
+  }
+  .synth-grid::before{
+    content:'';
+    position:absolute;
+    left:-50%; right:-50%; bottom:-10%;
+    height:220%;
+    background-image:
+      linear-gradient(to right, rgba(43,232,255,.55) 1px, transparent 1px),
+      linear-gradient(to top, rgba(255,43,176,.55) 1px, transparent 1px);
+    background-size: 64px 64px, 100% 64px;
+    transform: rotateX(78deg);
+    transform-origin: bottom center;
+    animation: gridScroll 6s linear infinite;
+  }
+  @keyframes gridScroll{
+    from{background-position: 0 0, 0 0;}
+    to{background-position: 0 64px, 0 64px;}
+  }
+  .scanlines{
+    position:fixed;inset:0;
+    z-index:6;
+    pointer-events:none;
+    opacity:calc(.22 + var(--audio-pulse, 0) * 0.15);
+    background-image: repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,.55) 3px, rgba(0,0,0,0) 4px);
+    mix-blend-mode:overlay;
+  }
+  .reactive-toggle{
+    position:fixed;
+    top:20px; right:20px;
+    z-index:10;
+    display:flex; align-items:center; gap:8px;
+    padding:10px 16px;
+    border-radius:100px;
+    border:1px solid rgba(43,232,255,.3);
+    background:rgba(9,7,18,.6);
+    backdrop-filter:blur(10px);
+    color:var(--muted);
+    font-family:'Orbitron', 'Space Grotesk', sans-serif;
+    font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    cursor:pointer;
+    transition:all .25s ease;
+  }
+  .reactive-toggle:hover{border-color:rgba(255,43,176,.5); color:var(--text);}
+  .reactive-toggle .rt-dot{
+    width:7px;height:7px;border-radius:50%;
+    background:#555;
+    transition:all .25s ease;
+  }
+  .reactive-toggle[aria-pressed="true"]{
+    color:#fff;
+    border-color:rgba(43,232,255,.65);
+    box-shadow:0 0 18px rgba(43,232,255,.3), 0 0 0 1px rgba(43,232,255,.15) inset;
+  }
+  .reactive-toggle[aria-pressed="true"] .rt-dot{
+    background:var(--accent-3);
+    box-shadow:0 0 8px var(--accent-3);
+    animation:dotPulse 1.1s ease-in-out infinite;
+  }
+  @media (max-width: 640px){
+    .reactive-toggle{top:12px; right:12px; padding:8px 12px; font-size:9.5px; gap:6px;}
+  }
+
   .noise{
     position:fixed;inset:0;pointer-events:none;opacity:.035;mix-blend-mode:overlay;z-index:5;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -39,6 +120,7 @@
     filter:blur(120px);
     z-index:0;
     opacity:.35;
+    transform: scale(calc(1 + var(--audio-pulse, 0) * 0.12));
     pointer-events:none;
   }
   .glow.a{background:var(--accent); top:-20%; left:-10%;}
@@ -69,14 +151,16 @@
   }
   header .kicker{
     display:flex;align-items:center;justify-content:center;gap:10px;
-    font-size:13px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;
+    font-family:'Orbitron', sans-serif;
+    font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--accent-3);margin-bottom:14px;
+    text-shadow:0 0 12px rgba(43,232,255,.5);
   }
   header .kicker-mark{
     width:6px;height:6px;
     background:linear-gradient(135deg, var(--accent-3), var(--accent-2));
     transform:rotate(45deg);
     border-radius:1px;
-    box-shadow:0 0 12px rgba(124,92,255,.7);
+    box-shadow:0 0 12px rgba(138,92,255,.7);
     animation:markPulse 3s ease-in-out infinite;
   }
   @keyframes markPulse{
@@ -84,19 +168,29 @@
     50%{opacity:1; transform:rotate(45deg) scale(1.3);}
   }
   header h1{
-    font-family:'Space Grotesk', sans-serif;
-    font-size: clamp(32px, 6vw, 64px);
+    font-family:'Orbitron', 'Space Grotesk', sans-serif;
+    font-weight:800;
+    font-size: clamp(32px, 6vw, 62px);
+    letter-spacing:.01em;
     margin:0;
-    line-height:1.05;
+    line-height:1.08;
     background:linear-gradient(120deg,#fff, var(--accent-3) 40%, var(--accent-2) 75%, #fff);
     -webkit-background-clip:text;background-clip:text;color:transparent;
     background-size:200% 200%;
-    animation:shine 8s ease infinite;
+    animation:shine 8s ease infinite, glitchPulse 7s ease-in-out infinite;
+    position:relative;
   }
   @keyframes shine{
     0%{background-position:0% 50%;}
     50%{background-position:100% 50%;}
     100%{background-position:0% 50%;}
+  }
+  @keyframes glitchPulse{
+    0%, 91%, 100% { text-shadow: 0 0 34px rgba(138,92,255,.35); transform:translate(0,0); }
+    92% { text-shadow: -3px 0 var(--accent-3), 3px 0 var(--accent-2), 0 0 34px rgba(138,92,255,.35); transform:translate(-2px,0) skewX(1deg); }
+    93.5% { text-shadow: 3px 0 var(--accent-3), -3px 0 var(--accent-2), 0 0 34px rgba(138,92,255,.35); transform:translate(2px,0) skewX(-1deg); }
+    95% { text-shadow: -1px 0 var(--accent-3), 1px 0 var(--accent-2), 0 0 34px rgba(138,92,255,.35); transform:translate(0,0); }
+    96%,100%{ text-shadow: 0 0 34px rgba(138,92,255,.35); transform:translate(0,0);}
   }
   header p{color:var(--muted);max-width:520px;margin:16px auto 0;font-size:15px;}
 
@@ -142,11 +236,19 @@
     border:1px solid rgba(255,255,255,.08);
     box-shadow: 0 20px 44px -18px rgba(0,0,0,.55), 0 1px 0 0 rgba(255,255,255,.05) inset;
     transform-style: preserve-3d;
-    transition: box-shadow .3s ease;
+    transition: box-shadow .3s ease, border-color .3s ease;
     padding:14px;
     display:flex;
     flex-direction:column;
     will-change: transform, opacity, filter;
+  }
+  .card:hover{
+    border-color: rgba(43,232,255,.4);
+    box-shadow:
+      0 20px 44px -18px rgba(0,0,0,.6),
+      0 1px 0 0 rgba(255,255,255,.05) inset,
+      0 0 0 1px rgba(43,232,255,.25),
+      0 0 26px -4px rgba(255,43,176,.45);
   }
   .card .cover{
     position:relative;
@@ -638,6 +740,14 @@
     display:flex;align-items:center;gap:8px;
   }
 
+  @media (prefers-reduced-motion: reduce){
+    header h1{animation:none;}
+    .synth-grid::before{animation:none;}
+    header .kicker-mark{animation:none;}
+    .preview-dot i{animation:none;}
+    .card.winner{animation:none;}
+  }
+
   @media (max-width: 640px){
     :root{--card-w:190px;--card-h:260px;}
     header h1{font-size:32px;}
@@ -662,17 +772,17 @@
   .extractor-head p{margin:0;color:var(--muted);font-size:14px;max-width:620px;}
 
   :root{
-    --bg-1:#0a0a12;
-    --accent:#7c5cff;
-    --accent-2:#ff5cad;
-    --accent-3:#5cd6ff;
+    --bg-1:#07050e;
+    --accent:#8a5cff;
+    --accent-2:#ff2bb0;
+    --accent-3:#2be8ff;
     --text:#f4f2ff;
     --muted:#9a94b8;
   }
   *{box-sizing:border-box;}
   html,body{
     margin:0;padding:0;min-height:100%;
-    background: radial-gradient(circle at 20% 0%, #1a1230 0%, var(--bg-1) 50%, #05050a 100%);
+    background: radial-gradient(circle at 20% 0%, #1c1030 0%, var(--bg-1) 50%, #020103 100%);
     color:var(--text);
     font-family:'Inter', sans-serif;
   }
@@ -819,16 +929,22 @@
 </style>
 </head>
 <body>
+  <canvas id="starfield"></canvas>
+  <div class="synth-grid"></div>
   <div class="glow a"></div>
   <div class="glow b"></div>
   <div class="glow c"></div>
+  <div class="scanlines"></div>
   <div class="noise"></div>
   <div class="cursor-glow" id="cursorGlow"></div>
+  <button id="reactiveToggle" class="reactive-toggle" type="button" aria-pressed="true" title="Toggle audio-reactive background">
+    <span class="rt-dot"></span><span class="rt-label">⚡ BG Animation</span>
+  </button>
 
   <header>
     <div class="kicker"><span class="kicker-mark"></span>Song Selector</div>
     <h1>Spin the Slide,<br/>Pick the Track</h1>
-    <p>Drag, scroll, or hit the button.</p>
+    <p>Drag, scroll, or hit the button. A 3D horizontal reel that lands on your next song.</p>
   </header>
 
   <section class="stage">
@@ -938,17 +1054,128 @@ const trackWrap = document.getElementById('trackWrap');
 const pickBtn = document.getElementById('pickBtn');
 const nowPicked = document.getElementById('nowPicked');
 
+(function initStarfield(){
+  const canvas = document.getElementById('starfield');
+  if(!canvas || typeof THREE === 'undefined') return;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 2000);
+  camera.position.z = 480;
+
+  const STAR_COUNT = window.innerWidth < 700 ? 700 : 1600;
+  const positions = new Float32Array(STAR_COUNT * 3);
+  const colors = new Float32Array(STAR_COUNT * 3);
+  const palette = [
+    [0.54, 0.36, 1.0],   // violet  (--accent)
+    [1.0, 0.17, 0.69],   // magenta (--accent-2)
+    [0.17, 0.91, 1.0],   // cyan    (--accent-3)
+    [1.0, 1.0, 1.0],     // white sparks
+  ];
+  for(let i = 0; i < STAR_COUNT; i++){
+    positions[i*3]     = (Math.random() - 0.5) * 1800;
+    positions[i*3 + 1] = (Math.random() - 0.5) * 1200;
+    positions[i*3 + 2] = (Math.random() - 0.5) * 1800;
+    const c = palette[Math.floor(Math.random() * palette.length)];
+    colors[i*3] = c[0]; colors[i*3+1] = c[1]; colors[i*3+2] = c[2];
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+  const material = new THREE.PointsMaterial({
+    size: 2.4,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  const points = new THREE.Points(geometry, material);
+  scene.add(points);
+
+  let targetRotX = 0, targetRotY = 0;
+  if(!isCoarsePointer && !reduceMotion){
+    window.addEventListener('pointermove', (e)=>{
+      targetRotY = ((e.clientX / window.innerWidth) - 0.5) * 0.25;
+      targetRotX = ((e.clientY / window.innerHeight) - 0.5) * 0.15;
+    }, { passive:true });
+  }
+
+  window.addEventListener('resize', ()=>{
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    if(reduceMotion) renderer.render(scene, camera);
+  });
+
+  if(reduceMotion){
+    renderer.render(scene, camera);
+    return;
+  }
+
+  function hashSeed(str){
+    let h = 0;
+    for(let i=0;i<str.length;i++){ h = (h * 31 + str.charCodeAt(i)) | 0; }
+    return Math.abs(h);
+  }
+
+  let pulse = 0;
+  let pulseClock = 0;
+  let lastT = performance.now();
+  const root = document.documentElement;
+
+  function animate(now){
+    requestAnimationFrame(animate);
+    const dt = Math.min((now - lastT) / 1000, 0.1);
+    lastT = now;
+
+    points.rotation.y += 0.0006;
+    points.rotation.x += 0.0002;
+    points.rotation.y += (targetRotY - points.rotation.y) * 0.02;
+    points.rotation.x += (targetRotX - points.rotation.x) * 0.02;
+
+    const isPlaying = typeof reactiveBgEnabled !== 'undefined' && reactiveBgEnabled &&
+      typeof previewCardIndex !== 'undefined' && previewCardIndex !== null &&
+      typeof SONGS !== 'undefined' && SONGS[previewCardIndex];
+
+    let targetPulse = 0;
+    if(isPlaying){
+      pulseClock += dt;
+      const seed = hashSeed(SONGS[previewCardIndex].youtubeId);
+      const bpm = 84 + (seed % 68);
+      const beatHz = bpm / 60;
+      const beat = Math.pow(Math.abs(Math.sin(pulseClock * Math.PI * beatHz)), 3);
+      const wobble = 0.5 + 0.5 * Math.sin(pulseClock * 0.6 + (seed % 10));
+      targetPulse = beat * 0.7 + wobble * 0.3;
+    } else {
+      pulseClock = 0;
+    }
+
+    pulse += (targetPulse - pulse) * Math.min(dt * 6, 1);
+
+    material.size = 2.2 + pulse * 2.4;
+    material.opacity = 0.75 + pulse * 0.25;
+    camera.position.z = 480 - pulse * 36;
+    root.style.setProperty('--audio-pulse', pulse.toFixed(3));
+
+    renderer.render(scene, camera);
+  }
+  requestAnimationFrame(animate);
+})();
+
 let cards = [];
 
-// Inline auto-preview state (which card is showing a live preview, if any)
 let previewIframe = null;
 let previewCardIndex = null;
 let previewSettleTimer = null;
 let previewMuted = true;
 
-// Browsers block unmuted autoplay until the person has actually clicked/tapped
-// on the page. Once that happens, unmute future previews automatically so the
-// person doesn't have to hit the speaker icon on every single card.
 let audioUnlocked = false;
 function unlockPreviewAudio(){
   if(audioUnlocked) return;
@@ -959,13 +1186,27 @@ function unlockPreviewAudio(){
   document.removeEventListener('keydown', unlockPreviewAudio);
   if(previewCardIndex !== null){
     const idx = previewCardIndex;
-    previewCardIndex = null; // force startInlinePreview to rebuild with sound
+    previewCardIndex = null;
     startInlinePreview(idx);
   }
 }
 document.addEventListener('click', unlockPreviewAudio);
 document.addEventListener('touchend', unlockPreviewAudio);
 document.addEventListener('keydown', unlockPreviewAudio);
+
+let reactiveBgEnabled = true;
+const reactiveToggleBtn = document.getElementById('reactiveToggle');
+if(reactiveToggleBtn){
+  reactiveToggleBtn.addEventListener('click', ()=>{
+    reactiveBgEnabled = !reactiveBgEnabled;
+    reactiveToggleBtn.setAttribute('aria-pressed', String(reactiveBgEnabled));
+    const label = reactiveToggleBtn.querySelector('.rt-label');
+    if(label) label.textContent = reactiveBgEnabled ? '⚡ BG Animation' : '⚡ BG Animation (Off)';
+    if(!reactiveBgEnabled){
+      document.documentElement.style.setProperty('--audio-pulse', '0');
+    }
+  });
+}
 
 function buildCard(s, i){
   const card = document.createElement('div');
@@ -1008,7 +1249,6 @@ function renderAllCards(){
   cards = Array.from(track.children);
 }
 
-// --- Persist SONGS library across reloads ---
 const SONGS_STORAGE_KEY = 'songpicker_library';
 
 (function loadSavedLibrary(){
@@ -1030,8 +1270,6 @@ function saveLibrary(){
   localStorage.setItem(SONGS_STORAGE_KEY, JSON.stringify(SONGS));
 }
 
-// hqdefault.jpg 404s for some videos (older/vertical uploads don't have it).
-// Step down through smaller sizes, then fall back to a drawn placeholder.
 const THUMB_PLACEHOLDER = 'data:image/svg+xml,' + encodeURIComponent(`
   <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
     <rect width="200" height="200" fill="#171425"/>
@@ -1056,7 +1294,6 @@ function ytThumbFallback(el, videoId){
 
 renderAllCards();
 
-// --- Premium ambient effects: cursor glow + glossy card highlight ---
 const cursorGlow = document.getElementById('cursorGlow');
 let glowX = 0, glowY = 0, glowShown = false;
 if(cursorGlow && !window.matchMedia('(pointer: coarse)').matches){
@@ -1076,7 +1313,6 @@ if(cursorGlow && !window.matchMedia('(pointer: coarse)').matches){
   }, { passive:true });
 }
 
-// Magnetic hover for the primary pick button — leans gently toward the cursor
 if(pickBtn && !window.matchMedia('(pointer: coarse)').matches){
   pickBtn.addEventListener('pointermove', (e)=>{
     const r = pickBtn.getBoundingClientRect();
@@ -1087,7 +1323,6 @@ if(pickBtn && !window.matchMedia('(pointer: coarse)').matches){
   pickBtn.addEventListener('pointerleave', ()=>{ pickBtn.style.transform = ''; });
 }
 
-// --- Merge imported songs from Playlist Extractor ---
 function mergeImportedSongs(imported){
   if(!Array.isArray(imported) || !imported.length) return 0;
   let addedCount = 0;
@@ -1142,8 +1377,6 @@ function updateCards(){
     }
     clearTimeout(previewSettleTimer);
     stopInlinePreview();
-    // Wait for the reel to settle on this card before starting a preview,
-    // so flicking past several songs doesn't spin up a video for each one.
     previewSettleTimer = setTimeout(()=>{ startInlinePreview(activeIndex); }, 600);
   } else {
     activeIndex = closestIdx;
@@ -1200,7 +1433,6 @@ function onScroll(){
 trackWrap.addEventListener('scroll', onScroll, {passive:true});
 window.addEventListener('resize', updateCards);
 
-// Drag to scroll
 let isDown=false, startX=0, scrollStart=0;
 trackWrap.addEventListener('pointerdown', e=>{
   isDown=true;
@@ -1245,7 +1477,6 @@ function announce(card){
   nowPicked.innerHTML = `Selected: <b>${s.title}</b> — ${s.artist}`;
 }
 
-// initial center + render
 requestAnimationFrame(()=>{
   scrollToCard(cards[0], false);
   updateCards();
@@ -1253,7 +1484,6 @@ requestAnimationFrame(()=>{
   previewSettleTimer = setTimeout(()=>{ startInlinePreview(activeIndex); }, 700);
 });
 
-// Pick-for-me: spins through cards then eases to a random winner
 let spinning = false;
 pickBtn.addEventListener('click', ()=>{
   if(spinning) return;
@@ -1301,13 +1531,11 @@ trackWrap.addEventListener('scroll', ()=>{
   clearTimeout(trackWrap._t);
   trackWrap._t = setTimeout(()=>{
     if(!isDown && !spinning) {
-      // no forced snap here to keep native snap working smoothly
+   
     }
   }, 120);
 });
 
-
-// --- YouTube preview modal ---
 const modalOverlay = document.getElementById('modalOverlay');
 const modalFrameWrap = document.getElementById('modalFrameWrap');
 const modalNow = document.getElementById('modalNow');
@@ -1350,8 +1578,6 @@ function openPreview(youtubeId, title, artist, cover){
   iframe.referrerPolicy = 'strict-origin-when-cross-origin';
 
   clearTimeout(fallbackTimer);
-  // Most YouTube embeds load within a couple seconds; if nothing has
-  // rendered after a while (blocked embed, offline, etc.) show the fallback.
   fallbackTimer = setTimeout(()=>{
     if(modalFrameWrap.classList.contains('loading')){
       showFallback(youtubeId, cover);
@@ -1375,7 +1601,6 @@ function closePreview(){
   clearTimeout(fallbackTimer);
   const existingIframe = modalFrameWrap.querySelector('iframe');
   if(existingIframe){
-    // Clearing src (rather than just removing the node) stops playback/audio immediately.
     existingIframe.src = 'about:blank';
     existingIframe.remove();
   }
@@ -1417,11 +1642,9 @@ track.addEventListener('click', (e)=>{
       document.removeEventListener('keydown', unlockPreviewAudio);
     }
     muteBtn.textContent = previewMuted ? '🔇' : '🔊';
-    // Re-request the embed with the new mute state (simplest reliable way
-    // without wiring up the full postMessage player API for a mini preview).
     if(previewCardIndex !== null){
       const idx = previewCardIndex;
-      previewCardIndex = null; // force a fresh start
+      previewCardIndex = null;
       startInlinePreview(idx);
     }
     return;
@@ -1454,7 +1677,6 @@ function removeSongAt(index){
   nowPicked.innerHTML = `Removed: <b>${removed.title}</b> — ${removed.artist}`;
 }
 
-// --- Clear playlist ---
 const clearPlaylistBtn = document.getElementById('clearPlaylistBtn');
 const confirmOverlay = document.getElementById('confirmOverlay');
 const confirmCancelBtn = document.getElementById('confirmCancelBtn');
@@ -1481,7 +1703,6 @@ confirmDeleteBtn.addEventListener('click', ()=>{
 });
 
 
-// --- Queue ---
 const submitBtn = document.getElementById('submitBtn');
 const queueList = document.getElementById('queueList');
 const queueEmpty = document.getElementById('queueEmpty');
@@ -1536,8 +1757,6 @@ queueList.addEventListener('click', (e)=>{
 
 renderQueue();
 
-
-// --- Embedded Playlist Extractor ---
 const apiKeyInput = document.getElementById('apiKey');
 const playlistInput = document.getElementById('playlistInput');
 const fetchBtn = document.getElementById('fetchBtn');
