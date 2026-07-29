@@ -6,7 +6,6 @@
 <title>Song Picker</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%238a5cff'/%3E%3Cstop offset='55%25' stop-color='%23ff2bb0'/%3E%3Cstop offset='100%25' stop-color='%232be8ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%230b0a12'/%3E%3Ccircle cx='32' cy='32' r='24' fill='url(%23g)'/%3E%3Cpath d='M26 21 L45 32 L26 43 Z' fill='%230b0a12'/%3E%3C/svg%3E">
 
-<!-- PWA / installable app support -->
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="theme-color" content="#07050e">
@@ -14,8 +13,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Song Picker">
-
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%237c5cff'/%3E%3Cstop offset='55%25' stop-color='%23ff5cad'/%3E%3Cstop offset='100%25' stop-color='%235cd6ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%230b0a12'/%3E%3Ccircle cx='32' cy='32' r='24' fill='url(%23g)'/%3E%3Cpath d='M26 21 L45 32 L26 43 Z' fill='%230b0a12'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
@@ -1109,6 +1106,10 @@
         <input type="text" id="playlistInput" placeholder="https://www.youtube.com/playlist?list=PL... or the ID itself">
       </div>
     </div>
+    <p class="proxy-note">
+      No API key needed — this runs through a shared server-side key.
+      <button type="button" id="advancedKeyToggle" class="link-btn">Use my own key instead</button>
+    </p>
     <div class="row" id="advancedKeyRow" style="display:none;">
       <div>
         <label for="apiKey">Your own YouTube Data API v3 Key (optional)</label>
@@ -1119,8 +1120,16 @@
     <div class="status" id="statusMsg"></div>
   </div>
 
+  <div class="help">
+    Need an API key? Create one for free at
+    <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console</a>
+    → enable <b>YouTube Data API v3</b> → create an <b>API key</b>. Keys are read directly in your browser and never sent anywhere except Google's API — nothing is stored or logged by this page.
+    Playlist must be Public or Unlisted (private playlists require OAuth, not just an API key).
+  </div>
+
   <div id="resultsWrap" style="margin-top:32px;"></div>
 </div>
+
 
     </div>
   </section>
