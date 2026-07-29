@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Song Picker</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%238a5cff'/%3E%3Cstop offset='55%25' stop-color='%23ff2bb0'/%3E%3Cstop offset='100%25' stop-color='%232be8ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%230b0a12'/%3E%3Ccircle cx='32' cy='32' r='24' fill='url(%23g)'/%3E%3Cpath d='M26 21 L45 32 L26 43 Z' fill='%230b0a12'/%3E%3C/svg%3E">
+
+<!-- PWA / installable app support -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#07050e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Song Picker">
+>>>>>>> Stashed changes
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -603,6 +614,20 @@
   }
   input[type=text]:focus{border-color:var(--accent);}
   .row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;}
+  .proxy-note{
+    font-size:12.5px;color:var(--muted);
+    margin:-6px 0 14px;
+  }
+  .link-btn{
+    background:none;border:none;
+    color:var(--accent-3);
+    font-size:12.5px;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+    margin-left:4px;
+  }
+  .link-btn:hover{color:var(--text);}
   .row > div{flex:1;min-width:220px;}
 
   .fetch-btn{
@@ -683,6 +708,17 @@
   }
   .vid-id:hover{background:rgba(92,214,255,.18);}
   .copy-hint{font-size:11px;color:var(--muted);}
+  .already-count{color:var(--muted); font-size:13px; font-weight:400;}
+  .row-in-library{opacity:.55;}
+  .in-library-badge{
+    font-size:11px;
+    color:var(--accent-3);
+    background:rgba(43,232,255,.1);
+    border:1px solid rgba(43,232,255,.25);
+    padding:3px 8px;
+    border-radius:100px;
+    white-space:nowrap;
+  }
 
   textarea{
     width:100%;min-height:140px;
@@ -747,12 +783,14 @@
 <div class="panel">
     <div class="row">
       <div>
-        <label for="apiKey">YouTube Data API v3 Key</label>
-        <input type="text" id="apiKey" placeholder="AIzaSy..." autocomplete="off">
-      </div>
-      <div>
         <label for="playlistInput">Playlist URL or ID</label>
         <input type="text" id="playlistInput" placeholder="https://www.youtube.com/playlist?list=PL... or the ID itself">
+      </div>
+    </div>
+    <div class="row" id="advancedKeyRow" style="display:none;">
+      <div>
+        <label for="apiKey">Your own YouTube Data API v3 Key (optional)</label>
+        <input type="text" id="apiKey" placeholder="AIzaSy..." autocomplete="off">
       </div>
     </div>
     <button class="fetch-btn" id="fetchBtn">Fetch Video IDs</button>
@@ -811,6 +849,14 @@
     </div>
   </div>
 <script>
+if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch((err) => {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
+
 const SONGS = [
   {title:"唱 / Show (Jax Jones Remix)",artist:"ADO",cover:"https://i.ytimg.com/vi/0tmJOrV-UE4/hqdefault.jpg",youtubeId:"0tmJOrV-UE4"},
   {title:"レコード大賞2022スペシャルメドレー（新時代〜逆光〜私は最強）",artist:"ADO",cover:"https://i.ytimg.com/vi/yQI-7GIKN7I/hqdefault.jpg",youtubeId:"yQI-7GIKN7I"},
@@ -867,7 +913,6 @@ function renderAllCards(){
   cards = Array.from(track.children);
 }
 
-// --- Persist SONGS library across reloads ---
 const SONGS_STORAGE_KEY = 'songpicker_library';
 
 (function loadSavedLibrary(){
@@ -891,7 +936,6 @@ function saveLibrary(){
 
 renderAllCards();
 
-// --- Merge imported songs from Playlist Extractor ---
 function mergeImportedSongs(imported){
   if(!Array.isArray(imported) || !imported.length) return 0;
   let addedCount = 0;
@@ -949,6 +993,77 @@ function updateCards(){
   }
 }
 
+function startInlinePreview(index){
+  const song = SONGS[index];
+  const card = cards[index];
+  if(!song || !card) return;
+  if(previewCardIndex === index) return;
+  stopInlinePreview();
+
+  const cover = card.querySelector('.cover');
+  if(!cover) return;
+
+  const iframeId = 'yt-inline-' + index + '-' + Date.now();
+  const iframe = document.createElement('iframe');
+  iframe.id = iframeId;
+  iframe.className = 'cover-preview';
+  iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(song.youtubeId)}?autoplay=1&mute=${previewMuted ? 1 : 0}&rel=0&modestbranding=1&playsinline=1&controls=0&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
+  iframe.title = `${song.title} preview`;
+  iframe.setAttribute('allow', 'autoplay; encrypted-media');
+  iframe.setAttribute('frameborder', '0');
+  iframe.addEventListener('load', ()=>{
+    iframe.classList.add('ready');
+    try{
+      iframe.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: iframeId }), '*');
+    }catch(e){  }
+  });
+
+  cover.appendChild(iframe);
+  card.classList.add('previewing');
+  const muteBtn = card.querySelector('.mute-btn');
+  if(muteBtn) muteBtn.textContent = previewMuted ? '🔇' : '🔊';
+
+  previewIframe = iframe;
+  previewCardIndex = index;
+}
+
+function stopInlinePreview(){
+  if(previewCardIndex !== null){
+    const prevCard = cards[previewCardIndex];
+    if(prevCard) prevCard.classList.remove('previewing');
+  }
+  if(previewIframe){
+    previewIframe.src = 'about:blank';
+    previewIframe.remove();
+  }
+  previewIframe = null;
+  previewCardIndex = null;
+}
+function advanceToNextSong(){
+  if(!cards.length) return;
+  const nextIndex = (activeIndex + 1) % cards.length;
+  scrollToCard(cards[nextIndex], true);
+}
+window.addEventListener('message', (event)=>{
+  if(event.origin !== 'https://www.youtube.com') return;
+  if(typeof event.data !== 'string') return;
+  let data;
+  try{ data = JSON.parse(event.data); }catch(e){ return; }
+  if(!data || data.event !== 'infoDelivery' || !data.info || typeof data.info.playerState === 'undefined') return;
+  if(data.info.playerState !== 0) return;
+
+  if(previewIframe && event.source === previewIframe.contentWindow){
+    if(autoAdvanceEnabled) advanceToNextSong();
+  } else if(typeof modalFrameWrap !== 'undefined'){
+    const modalIframe = modalFrameWrap.querySelector('iframe');
+    if(modalIframe && event.source === modalIframe.contentWindow){
+      closePreview();
+      if(autoAdvanceEnabled) advanceToNextSong();
+    }
+  }
+});
+
+>>>>>>> Stashed changes
 let ticking = false;
 function onScroll(){
   if(!ticking){
@@ -959,7 +1074,6 @@ function onScroll(){
 trackWrap.addEventListener('scroll', onScroll, {passive:true});
 window.addEventListener('resize', updateCards);
 
-// Drag to scroll
 let isDown=false, startX=0, scrollStart=0;
 trackWrap.addEventListener('pointerdown', e=>{
   isDown=true;
@@ -1004,13 +1118,11 @@ function announce(card){
   nowPicked.innerHTML = `Selected: <b>${s.title}</b> — ${s.artist}`;
 }
 
-// initial center + render
 requestAnimationFrame(()=>{
   scrollToCard(cards[0], false);
   updateCards();
 });
 
-// Pick-for-me: spins through cards then eases to a random winner
 let spinning = false;
 pickBtn.addEventListener('click', ()=>{
   if(spinning) return;
@@ -1058,13 +1170,10 @@ trackWrap.addEventListener('scroll', ()=>{
   clearTimeout(trackWrap._t);
   trackWrap._t = setTimeout(()=>{
     if(!isDown && !spinning) {
-      // no forced snap here to keep native snap working smoothly
     }
   }, 120);
 });
 
-
-// --- YouTube preview modal ---
 const modalOverlay = document.getElementById('modalOverlay');
 const modalFrameWrap = document.getElementById('modalFrameWrap');
 const modalNow = document.getElementById('modalNow');
@@ -1224,7 +1333,6 @@ function removeSongAt(index){
   nowPicked.innerHTML = `Removed: <b>${removed.title}</b> — ${removed.artist}`;
 }
 
-// --- Clear playlist ---
 const clearPlaylistBtn = document.getElementById('clearPlaylistBtn');
 const confirmOverlay = document.getElementById('confirmOverlay');
 const confirmCancelBtn = document.getElementById('confirmCancelBtn');
@@ -1306,16 +1414,29 @@ queueList.addEventListener('click', (e)=>{
 
 renderQueue();
 
-
-// --- Embedded Playlist Extractor ---
 const apiKeyInput = document.getElementById('apiKey');
 const playlistInput = document.getElementById('playlistInput');
 const fetchBtn = document.getElementById('fetchBtn');
 const statusMsg = document.getElementById('statusMsg');
 const resultsWrap = document.getElementById('resultsWrap');
+const advancedKeyToggle = document.getElementById('advancedKeyToggle');
+const advancedKeyRow = document.getElementById('advancedKeyRow');
+const PLAYLIST_API_PROXY = '/api/playlist';
 
 const savedKey = localStorage.getItem('yt_api_key');
 if(savedKey) apiKeyInput.value = savedKey;
+if(savedKey && advancedKeyRow){
+  advancedKeyRow.style.display = '';
+  if(advancedKeyToggle) advancedKeyToggle.textContent = 'Use the shared key instead';
+}
+
+if(advancedKeyToggle){
+  advancedKeyToggle.addEventListener('click', ()=>{
+    const showing = advancedKeyRow.style.display !== 'none';
+    advancedKeyRow.style.display = showing ? 'none' : '';
+    advancedKeyToggle.textContent = showing ? 'Use my own key instead' : 'Use the shared key instead';
+  });
+}
 
 function extractPlaylistId(input){
   input = input.trim();
@@ -1324,7 +1445,7 @@ function extractPlaylistId(input){
     const url = new URL(input);
     const listParam = url.searchParams.get('list');
     if(listParam) return listParam;
-  }catch(e){ /* not a full URL */ }
+  }catch(e){}
   const match = input.match(/list=([a-zA-Z0-9_-]+)/);
   if(match) return match[1];
   return input;
@@ -1334,16 +1455,21 @@ function setStatus(msg, type){
   statusMsg.textContent = msg;
   statusMsg.className = 'status' + (type ? ' ' + type : '');
 }
-
 async function fetchAllPlaylistItems(apiKey, playlistId){
   let items = [];
   let pageToken = '';
+  const usingOwnKey = !!apiKey;
+  if(!usingOwnKey && !PLAYLIST_API_PROXY){
+    throw new Error('No API key entered, and no shared proxy is configured for this deployment.');
+  }
   do{
-    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&pageToken=${pageToken}&key=${encodeURIComponent(apiKey)}`;
+    const url = usingOwnKey
+      ? `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${encodeURIComponent(playlistId)}&pageToken=${pageToken}&key=${encodeURIComponent(apiKey)}`
+      : `${PLAYLIST_API_PROXY}?playlistId=${encodeURIComponent(playlistId)}&pageToken=${encodeURIComponent(pageToken)}`;
     const res = await fetch(url);
     const data = await res.json();
     if(data.error){
-      throw new Error(data.error.message || 'API request failed');
+      throw new Error((data.error && data.error.message) || 'API request failed');
     }
     items = items.concat(data.items || []);
     pageToken = data.nextPageToken || '';
@@ -1364,15 +1490,16 @@ function renderResults(items){
     const thumbDefault = (thumbs.default && thumbs.default.url) || `https://i.ytimg.com/vi/${vid}/default.jpg`;
     const thumbMedium = (thumbs.medium && thumbs.medium.url) || `https://i.ytimg.com/vi/${vid}/mqdefault.jpg`;
     const thumbHigh = (thumbs.high && thumbs.high.url) || `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`;
-    return { i: i+1, vid, title, thumbDefault, thumbMedium, thumbHigh };
+    return { i: i+1, vid, title, thumbDefault, thumbMedium, thumbHigh, inLibrary: SONGS.some(s => s.youtubeId === vid) };
   });
 
   const idsOnly = rows.map(r => r.vid).join('\n');
   const jsonSnippet = JSON.stringify(rows.map(r => ({ title: r.title, youtubeId: r.vid, cover: r.thumbHigh })), null, 2);
+  const alreadyCount = rows.filter(r => r.inLibrary).length;
 
   resultsWrap.innerHTML = `
     <div class="results-head">
-      <h2>${rows.length} video${rows.length===1?'':'s'} found</h2>
+      <h2>${rows.length} video${rows.length===1?'':'s'} found${alreadyCount ? ` <span class="already-count">(${alreadyCount} already in your library)</span>` : ''}</h2>
       <div class="actions">
         <button class="action-btn" id="copyIdsBtn">Copy IDs only</button>
         <button class="action-btn" id="copyJsonBtn">Copy as JSON</button>
@@ -1381,15 +1508,16 @@ function renderResults(items){
       </div>
     </div>
     <table>
-      <thead><tr><th>#</th><th>Thumb</th><th>Title</th><th>Video ID</th><th>Thumbnail URL</th></tr></thead>
+      <thead><tr><th>#</th><th>Thumb</th><th>Title</th><th>Video ID</th><th>Thumbnail URL</th><th></th></tr></thead>
       <tbody>
         ${rows.map(r => `
-          <tr>
+          <tr class="${r.inLibrary ? 'row-in-library' : ''}">
             <td>${r.i}</td>
             <td><img class="thumb" src="${r.thumbMedium}" alt=""></td>
             <td class="vid-title" title="${r.title.replace(/"/g,'&quot;')}">${r.title}</td>
             <td><span class="vid-id" data-id="${r.vid}">${r.vid}</span></td>
             <td><span class="vid-id thumb-url" data-thumb="${r.thumbHigh}">${r.thumbHigh}</span></td>
+            <td>${r.inLibrary ? '<span class="in-library-badge" title="Already in your library — will be skipped">✓ Added</span>' : ''}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -1418,8 +1546,13 @@ function renderResults(items){
     });
     localStorage.setItem('songpicker_import', JSON.stringify(merged));
     setStatus(`Prepared ${merged.length} song(s) for Song Picker. Merging into current list…`, 'ok');
-    mergeImportedSongs(merged);
-    setStatus(`Merged ${merged.length} song(s) into Song Picker.`, 'ok');
+    const addedCount = mergeImportedSongs(merged);
+    const skippedCount = merged.length - addedCount;
+    setStatus(
+      `Merged ${addedCount} new song(s) into Song Picker` +
+      (skippedCount ? ` (${skippedCount} already in your library, skipped).` : '.'),
+      'ok'
+    );
   });
 
   document.getElementById('copyIdsBtn').addEventListener('click', () => {
@@ -1455,12 +1588,16 @@ function renderResults(items){
 fetchBtn.addEventListener('click', async () => {
   const apiKey = apiKeyInput.value.trim();
   const rawInput = playlistInput.value.trim();
-  if(!apiKey || !rawInput){
-    setStatus('Please enter both an API key and a playlist URL or ID.', 'error');
+  if(!rawInput){
+    setStatus('Please enter a playlist URL or ID.', 'error');
+    return;
+  }
+  if(!apiKey && !PLAYLIST_API_PROXY){
+    setStatus('Please enter an API key — no shared proxy is configured for this deployment.', 'error');
     return;
   }
   const playlistId = extractPlaylistId(rawInput);
-  localStorage.setItem('yt_api_key', apiKey);
+  if(apiKey) localStorage.setItem('yt_api_key', apiKey);
 
   fetchBtn.disabled = true;
   fetchBtn.innerHTML = `<span class="spinner"></span>Fetching...`;
