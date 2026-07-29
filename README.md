@@ -39,26 +39,21 @@ song-picker/
 ## Install: quick local run
 
 1. Download the project files, keeping the folder structure above.
-2. Open `index.html` in a browser.
+2. Run `start-local-server.bat` (Run `start-local-server.command` if you're using `MAC`). If you run `index.html` directly, the Youtube Embeded Player won't able to play due to 153 error.
 3. To import playlists, click **"Use my own key instead"** and paste a [YouTube Data API v3 key](https://console.cloud.google.com/apis/credentials). It's saved in your browser after the first use.
 
 ---
 
 ## Deploy on Vercel (shared API key for all visitors)
 
-1. Push this project to a GitHub repo, keeping the structure above.
-2. Go to [vercel.com/new](https://vercel.com/new) → import the repo → Deploy. No build config needed.
-3. In the Vercel project: **Settings → Environment Variables** → add:
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/goenyan/song-picker)
+1. In the Vercel project: **Settings → Environment Variables** → add:
    - Name: `YOUTUBE_API_KEY`
    - Value: your YouTube Data API v3 key
    - Scope: Production (and Preview, if used)
-4. Redeploy.
+2. Redeploy.
 
 Visitors can now import playlists without entering their own key.
-
-**One-click deploy**
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/goenyan/song-picker)
 
 **Recommended:** in Google Cloud Console, restrict your API key to only the YouTube Data API v3 under "API restrictions."
 
