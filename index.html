@@ -1817,12 +1817,13 @@ pickBtn.addEventListener('click', ()=>{
 
   const winnerIndex = drawFromShuffleBag(activeIndex);
   const winnerPos = Math.max(0, visibleIndices.indexOf(winnerIndex));
-  const totalLoops = 2;
+  const maxHops = Math.min(visibleIndices.length * 2, 24);
+  const n = visibleIndices.length;
   const sequence = [];
-  for(let l=0;l<totalLoops;l++){
-    for(let k=0;k<visibleIndices.length;k++) sequence.push(visibleIndices[k]);
+  for(let i = maxHops; i >= 0; i--){
+    const idx = ((winnerPos - i) % n + n) % n;
+    sequence.push(visibleIndices[idx]);
   }
-  for(let k=0;k<=winnerPos;k++) sequence.push(visibleIndices[k]);
 
   let step = 0;
   const baseDelay = 90;
