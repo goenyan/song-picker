@@ -246,15 +246,26 @@
     border-color:rgba(43,232,255,.6);
     box-shadow:0 0 20px -4px rgba(43,232,255,.4);
   }
-  .search-icon{color:var(--muted); flex-shrink:0;}
-  .search-input{
+  .search-icon{
+    color:var(--muted);
+    flex-shrink:0;
+    display:block;
+    align-self:center;
+  }
+  #songSearch.search-input{
     flex:1;
+    width:auto;
     background:none;
     border:none;
     outline:none;
+    margin:0;
+    padding:0;
+    border-radius:0;
     color:var(--text);
     font-family:'Inter', sans-serif;
     font-size:14px;
+    line-height:normal;
+    align-self:center;
   }
   .search-input::placeholder{color:var(--muted);}
   .search-clear{
@@ -379,13 +390,13 @@
   .card .mute-btn{
     position:absolute;
     bottom:12px;left:12px;
-    width:34px;height:34px;
+    width:38px;height:38px;
     border-radius:50%;
     border:1px solid rgba(255,255,255,.2);
     background:rgba(10,10,20,.55);
     backdrop-filter:blur(8px);
     color:#fff;
-    font-size:13px;
+    font-size:14px;
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;
     z-index:3;
@@ -452,13 +463,13 @@
   .card   .remove-song-btn{
     position:absolute;
     top:12px;right:12px;
-    width:34px;height:34px;
+    width:38px;height:38px;
     border-radius:50%;
     border:1px solid rgba(255,255,255,.2);
     background:rgba(10,10,20,.55);
     backdrop-filter:blur(8px);
     color:#fff;
-    font-size:13px;
+    font-size:14px;
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;
     z-index:3;
@@ -477,13 +488,13 @@
   .play-btn{
     position:absolute;
     bottom:12px;right:12px;
-    width:44px;height:44px;
+    width:38px;height:38px;
     border-radius:50%;
     border:1px solid rgba(255,255,255,.25);
     background:rgba(10,10,20,.55);
     backdrop-filter:blur(8px);
     color:#fff;
-    font-size:15px;
+    font-size:14px;
     display:flex;align-items:center;justify-content:center;
     cursor:pointer;
     z-index:2;
@@ -585,18 +596,7 @@
     width:100%;height:100%;border:0;display:block;
   }
 
-.badge{
-    position:absolute;top:22px;right:22px;
-    width:34px;height:34px;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
-    background:rgba(10,10,20,.55);
-    border:1px solid rgba(255,255,255,.15);
-    backdrop-filter: blur(6px);
-    opacity:0;transform:scale(.7);
-    transition:all .3s ease;
-  }
-  .card.active .badge{opacity:1;transform:scale(1);}
-  .card.active{
+.card.active{
     box-shadow: 0 22px 46px -16px rgba(124,92,255,.55), 0 0 0 1px rgba(255,255,255,.18);
   }
   .card.winner{
@@ -1171,7 +1171,6 @@ const nowPicked = document.getElementById('nowPicked');
         (test.getContext('webgl') || test.getContext('experimental-webgl')));
     }catch(e){ return false; }
   }
-
   if(isCoarsePointer || isSmallScreen || typeof THREE === 'undefined' || !supportsWebGL()){
     useCssFallback();
     return;
@@ -1345,7 +1344,6 @@ if(autoAdvanceToggleBtn){
     if(label) label.textContent = autoAdvanceEnabled ? '⏭ Auto-Next' : '⏭ Auto-Next (Off)';
   });
 }
-
 const songSearchInput = document.getElementById('songSearch');
 const searchWrap = document.querySelector('.search-wrap');
 const searchClearBtn = document.getElementById('searchClear');
@@ -1355,7 +1353,7 @@ function applySearchFilter(){
   const query = songSearchInput.value.trim().toLowerCase();
   searchWrap.classList.toggle('has-query', query.length > 0);
   shuffleBag = [];
-  
+
   let visibleCount = 0;
   cards.forEach((card, i) => {
     const song = SONGS[i];
@@ -1369,7 +1367,6 @@ function applySearchFilter(){
   searchCountEl.textContent = query
     ? `${visibleCount} match${visibleCount === 1 ? '' : 'es'}`
     : '';
-
   const activeCard = cards[activeIndex];
   if(activeCard && activeCard.classList.contains('filtered-out')){
     clearTimeout(previewSettleTimer);
@@ -1391,8 +1388,6 @@ if(songSearchInput){
     songSearchInput.focus();
   });
 }
-
-
 window.addEventListener('keydown', (e)=>{
   const tag = document.activeElement && document.activeElement.tagName;
   const typing = tag === 'INPUT' || tag === 'TEXTAREA';
@@ -1447,7 +1442,6 @@ function buildCard(s, i){
       <div class="title">${s.title}</div>
       <div class="artist">${s.artist}</div>
     </div>
-    <div class="badge">✓</div>
   `;
   return card;
 }
@@ -1620,7 +1614,6 @@ function startInlinePreview(index){
   const iframe = document.createElement('iframe');
   iframe.id = iframeId;
   iframe.className = 'cover-preview';
-
   iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(song.youtubeId)}?autoplay=1&mute=${previewMuted ? 1 : 0}&rel=0&modestbranding=1&playsinline=1&controls=0&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
   iframe.title = `${song.title} preview`;
   iframe.setAttribute('allow', 'autoplay; encrypted-media');
@@ -1629,7 +1622,7 @@ function startInlinePreview(index){
     iframe.classList.add('ready');
     try{
       iframe.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: iframeId }), '*');
-    }catch(e){}
+    }catch(e){  }
   });
 
   cover.appendChild(iframe);
