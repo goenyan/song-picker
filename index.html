@@ -169,7 +169,6 @@
   .glow.b{background:var(--accent-2); bottom:-25%; right:-10%;}
   .glow.c{background:var(--accent-3); top:30%; right:20%; width:35vw;height:35vw; opacity:.18;}
 
-  
   .cursor-glow{
     position:fixed;
     top:0;left:0;
@@ -915,6 +914,28 @@
     transition:border-color .2s ease;
   }
   input[type=text]:focus{border-color:var(--accent);}
+  select{
+    width:100%;
+    background-color:rgba(0,0,0,.3);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:12px;
+    color:var(--text);
+    padding:12px 36px 12px 14px;
+    font-size:14px;
+    font-family:'Inter', sans-serif;
+    outline:none;
+    margin-bottom:18px;
+    cursor:pointer;
+    transition:border-color .2s ease;
+    appearance:none;
+    -webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a94b8' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+  }
+  select:focus{border-color:var(--accent);}
+  select option{background-color:#150f26; color:var(--text);}
+
   .row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;}
   .proxy-note{
     font-size:12.5px;color:var(--muted);
@@ -930,6 +951,62 @@
     margin-left:4px;
   }
   .link-btn:hover{color:var(--text);}
+
+  .discover-panel{
+    background:rgba(43,232,255,.04);
+    border:1px solid rgba(43,232,255,.18);
+    border-radius:16px;
+    padding:22px 24px;
+    margin-bottom:22px;
+  }
+  .discover-head h3{
+    font-family:'Orbitron', sans-serif;
+    font-size:15px;
+    letter-spacing:.04em;
+    margin:0 0 4px;
+    color:var(--text);
+  }
+  .discover-head p{
+    font-size:13px;color:var(--muted);margin:0 0 16px;
+  }
+  .discover-results{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+    gap:14px;
+    margin-top:18px;
+  }
+  .discover-card{
+    background:rgba(255,255,255,.03);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:12px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    transition:border-color .2s ease, transform .2s ease;
+  }
+  .discover-card:hover{border-color:rgba(43,232,255,.4); transform:translateY(-2px);}
+  .discover-card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#111;}
+  .discover-card-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;flex:1;}
+  .discover-card-title{
+    font-size:13px;font-weight:600;color:var(--text);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+    line-height:1.35;
+  }
+  .discover-card-channel{font-size:11.5px;color:var(--muted);}
+  .discover-card-btn{
+    margin-top:auto;
+    background:linear-gradient(120deg, var(--accent), var(--accent-2));
+    color:#fff;
+    border:none;
+    border-radius:8px;
+    padding:8px 10px;
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    transition:opacity .2s ease;
+  }
+  .discover-card-btn:hover{opacity:.88;}
+  .discover-empty{color:var(--muted); font-size:13px; margin-top:14px;}
   .row > div{flex:1;min-width:220px;}
 
   .fetch-btn{
@@ -1100,6 +1177,62 @@
         <h2>Import from YouTube Playlist</h2>
         <p>Paste a playlist, fetch every song ID and thumbnail, then merge them directly into the Song Picker below.</p>
       </div>
+
+      <div class="discover-panel">
+        <div class="discover-head">
+          <h3>🔮 Discover Playlists</h3>
+          <p>Not sure what to import? Search by genre, artist, or language and pick from real public YouTube playlists.</p>
+        </div>
+        <div class="row">
+          <div>
+            <label for="discoverGenre">Genre</label>
+            <select id="discoverGenre">
+              <option value="">Any</option>
+              <option value="Pop">Pop</option>
+              <option value="Rock">Rock</option>
+              <option value="Hip-Hop">Hip-Hop</option>
+              <option value="EDM">EDM</option>
+              <option value="J-Pop">J-Pop</option>
+              <option value="K-Pop">K-Pop</option>
+              <option value="Lo-fi">Lo-fi</option>
+              <option value="Jazz">Jazz</option>
+              <option value="Classical">Classical</option>
+              <option value="R&amp;B">R&amp;B</option>
+              <option value="Anime">Anime</option>
+              <option value="Indie">Indie</option>
+              <option value="Metal">Metal</option>
+              <option value="Country">Country</option>
+              <option value="City Pop">City Pop</option>
+            </select>
+          </div>
+          <div>
+            <label for="discoverArtist">Artist (optional)</label>
+            <input type="text" id="discoverArtist" placeholder="e.g. Ado, Radiohead" autocomplete="off">
+          </div>
+          <div>
+            <label for="discoverLanguage">Language</label>
+            <select id="discoverLanguage">
+              <option value="">Any</option>
+              <option value="en">English</option>
+              <option value="ja">Japanese</option>
+              <option value="ko">Korean</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="pt">Portuguese</option>
+              <option value="hi">Hindi</option>
+              <option value="zh">Chinese</option>
+              <option value="vi">Vietnamese</option>
+              <option value="th">Thai</option>
+              <option value="id">Indonesian</option>
+            </select>
+          </div>
+        </div>
+        <button class="fetch-btn" id="discoverBtn">🔍 Find Playlists</button>
+        <div class="status" id="discoverStatus"></div>
+        <div id="discoverResults" class="discover-results"></div>
+      </div>
+
 <div class="panel">
     <div class="row">
       <div>
@@ -1219,6 +1352,7 @@ const nowPicked = document.getElementById('nowPicked');
         (test.getContext('webgl') || test.getContext('experimental-webgl')));
     }catch(e){ return false; }
   }
+
   if(isCoarsePointer || isSmallScreen || typeof THREE === 'undefined' || !supportsWebGL()){
     useCssFallback();
     return;
@@ -1392,6 +1526,7 @@ if(autoAdvanceToggleBtn){
     if(label) label.textContent = autoAdvanceEnabled ? '⏭ Auto-Next' : '⏭ Auto-Next (Off)';
   });
 }
+
 const songSearchInput = document.getElementById('songSearch');
 const searchWrap = document.querySelector('.search-wrap');
 const searchClearBtn = document.getElementById('searchClear');
@@ -1415,6 +1550,7 @@ function applySearchFilter(){
   searchCountEl.textContent = query
     ? `${visibleCount} match${visibleCount === 1 ? '' : 'es'}`
     : '';
+
   const activeCard = cards[activeIndex];
   if(activeCard && activeCard.classList.contains('filtered-out')){
     clearTimeout(previewSettleTimer);
@@ -1436,6 +1572,7 @@ if(songSearchInput){
     songSearchInput.focus();
   });
 }
+
 window.addEventListener('keydown', (e)=>{
   const tag = document.activeElement && document.activeElement.tagName;
   const typing = tag === 'INPUT' || tag === 'TEXTAREA';
@@ -1671,7 +1808,7 @@ function startInlinePreview(index){
     iframe.classList.add('ready');
     try{
       iframe.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: iframeId }), '*');
-    }catch(e){  }
+    }catch(e){ }
   });
 
   cover.appendChild(iframe);
@@ -1695,11 +1832,13 @@ function stopInlinePreview(){
   previewIframe = null;
   previewCardIndex = null;
 }
+
 function advanceToNextSong(){
   if(!cards.length) return;
   const nextIndex = (activeIndex + 1) % cards.length;
   scrollToCard(cards[nextIndex], true);
 }
+
 window.addEventListener('message', (event)=>{
   if(event.origin !== 'https://www.youtube.com') return;
   if(typeof event.data !== 'string') return;
@@ -1781,6 +1920,7 @@ requestAnimationFrame(()=>{
   clearTimeout(previewSettleTimer);
   previewSettleTimer = setTimeout(()=>{ startInlinePreview(activeIndex); }, 700);
 });
+
 function drawFromShuffleBag(excludeIndex){
   if(shuffleBag.length === 0){
     shuffleBag = cards
@@ -1817,6 +1957,7 @@ pickBtn.addEventListener('click', ()=>{
 
   const winnerIndex = drawFromShuffleBag(activeIndex);
   const winnerPos = Math.max(0, visibleIndices.indexOf(winnerIndex));
+
   const maxHops = Math.min(visibleIndices.length * 2, 24);
   const n = visibleIndices.length;
   const sequence = [];
@@ -1912,7 +2053,7 @@ function openPreview(youtubeId, title, artist, cover){
     clearTimeout(fallbackTimer);
     try{
       iframe.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: modalIframeId }), '*');
-    }catch(e){  }
+    }catch(e){ }
   });
   iframe.addEventListener('error', ()=>{
     clearTimeout(fallbackTimer);
@@ -2090,7 +2231,9 @@ const statusMsg = document.getElementById('statusMsg');
 const resultsWrap = document.getElementById('resultsWrap');
 const advancedKeyToggle = document.getElementById('advancedKeyToggle');
 const advancedKeyRow = document.getElementById('advancedKeyRow');
+
 const PLAYLIST_API_PROXY = '/api/playlist';
+const SEARCH_API_PROXY = '/api/search-playlists';
 
 const savedKey = localStorage.getItem('yt_api_key');
 if(savedKey) apiKeyInput.value = savedKey;
@@ -2114,7 +2257,7 @@ function extractPlaylistId(input){
     const url = new URL(input);
     const listParam = url.searchParams.get('list');
     if(listParam) return listParam;
-  }catch(e){  }
+  }catch(e){ }
   const match = input.match(/list=([a-zA-Z0-9_-]+)/);
   if(match) return match[1];
   return input;
@@ -2124,6 +2267,7 @@ function setStatus(msg, type){
   statusMsg.textContent = msg;
   statusMsg.className = 'status' + (type ? ' ' + type : '');
 }
+
 async function fetchAllPlaylistItems(apiKey, playlistId){
   let items = [];
   let pageToken = '';
@@ -2296,6 +2440,128 @@ fetchBtn.addEventListener('click', async () => {
     fetchBtn.textContent = 'Fetch Video IDs';
   }
 });
+
+const discoverGenre = document.getElementById('discoverGenre');
+const discoverArtist = document.getElementById('discoverArtist');
+const discoverLanguage = document.getElementById('discoverLanguage');
+const discoverBtn = document.getElementById('discoverBtn');
+const discoverStatus = document.getElementById('discoverStatus');
+const discoverResults = document.getElementById('discoverResults');
+
+function setDiscoverStatus(msg, type){
+  discoverStatus.textContent = msg;
+  discoverStatus.className = 'status' + (type ? ' ' + type : '');
+}
+
+async function searchPlaylists(query, relevanceLanguage, regionCode, apiKey){
+  const usingOwnKey = !!apiKey;
+  if(!usingOwnKey && !SEARCH_API_PROXY){
+    throw new Error('No API key entered, and no shared proxy is configured for this deployment.');
+  }
+  const params = new URLSearchParams();
+  params.set('q', query);
+  if(relevanceLanguage) params.set('relevanceLanguage', relevanceLanguage);
+  if(regionCode) params.set('regionCode', regionCode);
+
+  let url;
+  if(usingOwnKey){
+    params.set('part', 'snippet');
+    params.set('type', 'playlist');
+    params.set('maxResults', '12');
+    params.set('key', apiKey);
+    url = `https://www.googleapis.com/youtube/v3/search?${params.toString()}`;
+  } else {
+    url = `${SEARCH_API_PROXY}?${params.toString()}`;
+  }
+
+  const res = await fetch(url);
+  const data = await res.json();
+  if(data.error){
+    throw new Error((data.error && data.error.message) || 'Search request failed');
+  }
+  return data.items || [];
+}
+
+function renderDiscoverResults(items){
+  if(!items.length){
+    discoverResults.innerHTML = `<div class="discover-empty">No playlists found — try a different genre, artist, or language.</div>`;
+    return;
+  }
+  discoverResults.innerHTML = items.map(item => {
+    const pid = item.id && item.id.playlistId;
+    if(!pid) return '';
+    const snip = item.snippet || {};
+    const title = (snip.title || 'Untitled playlist').replace(/</g,'&lt;');
+    const channel = (snip.channelTitle || '').replace(/</g,'&lt;');
+    const thumbs = snip.thumbnails || {};
+    const thumb = (thumbs.medium || thumbs.default || {}).url || '';
+    return `
+      <div class="discover-card">
+        <img src="${thumb}" alt="" loading="lazy">
+        <div class="discover-card-body">
+          <div class="discover-card-title" title="${title}">${title}</div>
+          <div class="discover-card-channel">${channel}</div>
+          <button type="button" class="discover-card-btn" data-playlist-id="${pid}">Use this playlist</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+discoverResults.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.discover-card-btn');
+  if(!btn) return;
+  playlistInput.value = btn.dataset.playlistId;
+  playlistInput.scrollIntoView({ behavior:'smooth', block:'center' });
+  playlistInput.focus();
+  setDiscoverStatus('Playlist ID filled in below — click "Fetch Video IDs" to pull its songs.', 'ok');
+});
+
+const LANGUAGE_META = {
+  en: { name: 'English', region: 'US' },
+  ja: { name: 'Japanese', region: 'JP' },
+  ko: { name: 'Korean', region: 'KR' },
+  es: { name: 'Spanish', region: 'ES' },
+  fr: { name: 'French', region: 'FR' },
+  de: { name: 'German', region: 'DE' },
+  pt: { name: 'Portuguese', region: 'BR' },
+  hi: { name: 'Hindi', region: 'IN' },
+  zh: { name: 'Chinese', region: 'TW' },
+  vi: { name: 'Vietnamese', region: 'VN' },
+  th: { name: 'Thai', region: 'TH' },
+  id: { name: 'Indonesian', region: 'ID' },
+};
+
+if(discoverBtn){
+  discoverBtn.addEventListener('click', async ()=>{
+    const genre = discoverGenre.value.trim();
+    const artist = discoverArtist.value.trim();
+    const language = discoverLanguage.value;
+    if(!genre && !artist){
+      setDiscoverStatus('Enter at least a genre or an artist to search for.', 'error');
+      return;
+    }
+    const meta = LANGUAGE_META[language];
+    const query = [genre, artist, meta ? meta.name : '', 'playlist'].filter(Boolean).join(' ');
+    const apiKey = apiKeyInput.value.trim();
+
+    discoverBtn.disabled = true;
+    discoverBtn.innerHTML = `<span class="spinner"></span>Searching...`;
+    setDiscoverStatus('Searching YouTube for matching playlists…');
+    discoverResults.innerHTML = '';
+
+    try{
+      const items = await searchPlaylists(query, language, meta ? meta.region : '', apiKey);
+      renderDiscoverResults(items);
+      setDiscoverStatus(`Found ${items.length} playlist${items.length===1?'':'s'}.`, items.length ? 'ok' : '');
+    }catch(err){
+      setDiscoverStatus('Error: ' + err.message, 'error');
+    }finally{
+      discoverBtn.disabled = false;
+      discoverBtn.textContent = '🔍 Find Playlists';
+    }
+  });
+}
 </script>
 </body>
 </html>

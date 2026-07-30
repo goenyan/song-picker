@@ -8,7 +8,7 @@ module.exports = async function handler(req, res) {
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey) {
     return res.status(500).json({
-      error: 'Youtube API is incorrect or missing',
+      error: 'Youtube API is incorrect or missing.',
     });
   }
 

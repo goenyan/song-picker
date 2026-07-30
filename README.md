@@ -8,8 +8,9 @@ A YouTube-powered song picker with a reel, previews, and random selection — bu
   - Private/deleted videos are automatically skipped.
   - Duplicate songs are detected and skipped, with an "already added" flag shown before merging.
   - No personal API key required by default (see Deploy on Vercel below); a "use my own key" option is also available.
+- **Discover Playlists** — search for public YouTube playlists by genre, artist, and/or language instead of needing a playlist link already in hand. Results show as clickable cards you can import with one click.
 - **Reel browser** with search/filter and full keyboard navigation (arrows, Enter, Space, Esc).
-- **Pick a Song For Me** — random selection with no-repeat shuffling.
+- **Pick a Song For Me** — random selection with no-repeat shuffling. Spin time stays consistent no matter how big your library gets.
 - **Previews** — inline auto-preview on the centered card, plus a full-size preview modal. Auto-advances to the next song when a preview ends (toggleable).
 - **Neon visual theme** with a reactive background pulse (toggleable), scaled down automatically on mobile for performance.
 - **Queue** — build a separate play queue from the library, in-memory.
@@ -25,13 +26,16 @@ song-picker/
 ├── index.html
 ├── manifest.json
 ├── service-worker.js
+├── start-local-server.command
+├── start-local-server.bat
 ├── icons/
 │   ├── icon-192.png
 │   ├── icon-512.png
 │   ├── icon-maskable-512.png
 │   └── apple-touch-icon.png
 └── api/
-    └── playlist.js
+    ├── playlist.js
+    └── search-playlists.js
 ```
 
 ---
@@ -53,7 +57,7 @@ song-picker/
    - Scope: Production (and Preview, if used)
 2. Redeploy.
 
-Visitors can now import playlists without entering their own key.
+Visitors can now import playlists — and use Discover Playlists — without entering their own key. Both features share the same `YOUTUBE_API_KEY`, so there's nothing extra to configure.
 
 **Recommended:** in Google Cloud Console, restrict your API key to only the YouTube Data API v3 under "API restrictions."
 
@@ -62,6 +66,7 @@ Visitors can now import playlists without entering their own key.
 ## Known limitations
 
 - The queue resets on page refresh.
+- Discover Playlists' language/genre matching is search-based (YouTube has no true genre filter), so results are a best-effort match, not guaranteed.
 - The reactive background pulse is simulated per-song, not real-time audio analysis.
 - Auto-advance needs the page served over a real origin (http/https) — it won't trigger if `index.html` is opened directly via `file://`, though playback itself still works.
 - The YouTube Data API has daily quota limits; high-traffic deployments may want caching/rate-limiting added to `api/playlist.js`.
