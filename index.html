@@ -151,6 +151,58 @@
     .reactive-toggle{padding:8px 12px; font-size:9.5px; gap:6px;}
   }
 
+  body.has-now-playing{padding-bottom:84px;}
+  .now-playing-bar{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    z-index:15;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:10px 20px;
+    background:rgba(9,7,18,.75);
+    backdrop-filter:blur(16px);
+    border-top:1px solid rgba(43,232,255,.25);
+    box-shadow:0 -10px 30px -10px rgba(0,0,0,.6);
+    transform:translateY(100%);
+    opacity:0;
+    transition:transform .35s ease, opacity .35s ease;
+  }
+  .now-playing-bar.visible{transform:translateY(0); opacity:1;}
+  .np-thumb{
+    width:44px;height:44px;border-radius:10px;object-fit:cover;flex-shrink:0;
+    box-shadow:0 0 0 1px rgba(255,255,255,.1);
+  }
+  .np-info{min-width:0; flex:1;}
+  .np-title{
+    font-size:13.5px; font-weight:600; color:var(--text);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .np-artist{
+    font-size:12px; color:var(--muted);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .np-controls{display:flex; align-items:center; gap:8px; flex-shrink:0;}
+  .np-btn{
+    width:34px;height:34px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.04);
+    color:var(--text);
+    font-size:13px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    transition:all .2s ease;
+  }
+  .np-btn:hover{border-color:rgba(43,232,255,.5); background:rgba(43,232,255,.12);}
+  .np-expand{font-size:12px;}
+  @media (max-width: 640px){
+    .now-playing-bar{padding:8px 12px; gap:10px;}
+    .np-artist{display:none;}
+    .np-btn{width:30px;height:30px;font-size:12px;}
+    body.has-now-playing{padding-bottom:70px;}
+  }
+
   .noise{
     position:fixed;inset:0;pointer-events:none;opacity:.035;mix-blend-mode:overlay;z-index:5;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -328,6 +380,11 @@
     gap:36px;
     width:max-content;
     will-change:transform;
+  }
+  .track.is-empty{
+    width:100%;
+    justify-content:center;
+    align-items:center;
   }
   .card{
     position:relative;
@@ -1007,6 +1064,38 @@
   }
   .discover-card-btn:hover{opacity:.88;}
   .discover-empty{color:var(--muted); font-size:13px; margin-top:14px;}
+  .discover-btn-row{display:flex; gap:12px; flex-wrap:wrap;}
+  .fetch-btn.secondary{
+    background:rgba(43,232,255,.08);
+    border:1px solid rgba(43,232,255,.35);
+    color:var(--text);
+    box-shadow:none;
+  }
+  .fetch-btn.secondary:hover{background:rgba(43,232,255,.16); box-shadow:none;}
+
+  .vibe-presets{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-bottom:18px;}
+  .vibe-label{font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-right:2px;}
+  .vibe-chip{
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.14);
+    color:var(--text);
+    font-size:13px;
+    padding:7px 14px;
+    border-radius:100px;
+    cursor:pointer;
+    transition:all .2s ease;
+    white-space:nowrap;
+  }
+  .vibe-chip:hover{
+    border-color:rgba(43,232,255,.5);
+    background:rgba(43,232,255,.1);
+    transform:translateY(-1px);
+  }
+  .vibe-chip.active{
+    border-color:var(--accent-3);
+    background:rgba(43,232,255,.18);
+    box-shadow:0 0 14px -2px rgba(43,232,255,.5);
+  }
   .row > div{flex:1;min-width:220px;}
 
   .fetch-btn{
@@ -1098,6 +1187,20 @@
     border-radius:100px;
     white-space:nowrap;
   }
+  .row-add-btn{
+    font-size:11px;
+    font-weight:600;
+    color:#0a0a12;
+    background:linear-gradient(120deg, var(--accent-3), var(--accent-2));
+    border:none;
+    padding:5px 10px;
+    border-radius:100px;
+    white-space:nowrap;
+    cursor:pointer;
+    transition:opacity .2s ease;
+  }
+  .row-add-btn:hover{opacity:.85;}
+  .row-add-btn:disabled{opacity:.6;cursor:default;}
 
   textarea{
     width:100%;min-height:140px;
@@ -1152,7 +1255,7 @@
     <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input type="text" id="songSearch" class="search-input" placeholder="Search songs or artists…" autocomplete="off">
     <button id="searchClear" class="search-clear" type="button" title="Clear search" aria-label="Clear search">✕</button>
-    <span id="searchCount" class="search-count"></span>
+    <span id="searchCount" class="search-count" aria-live="polite"></span>
   </div>
 
   <section class="stage">
@@ -1163,7 +1266,7 @@
 
   <div class="controls">
     <button class="pick-btn" id="pickBtn">🎲 Pick a Song For Me</button>
-    <div class="now-picked" id="nowPicked">Drag the reel or press the button to choose.</div>
+    <div class="now-picked" id="nowPicked" role="status" aria-live="polite">Drag the reel or press the button to choose.</div>
     <div class="control-row">
       <button class="submit-btn" id="submitBtn">➕ Submit to Queue</button>
       <button class="clear-playlist-btn" id="clearPlaylistBtn">🗑 Clear Playlist</button>
@@ -1182,6 +1285,17 @@
         <div class="discover-head">
           <h3>🔮 Discover Playlists</h3>
           <p>Not sure what to import? Search by genre, artist, or language and pick from real public YouTube playlists.</p>
+        </div>
+        <div class="vibe-presets">
+          <span class="vibe-label">Quick vibes</span>
+          <button type="button" class="vibe-chip" data-genre="Lo-fi" data-language="" data-extra="chill beats study sleep">🌙 Late Night Lo-fi</button>
+          <button type="button" class="vibe-chip" data-genre="Pop" data-language="" data-extra="party dance hits">🎉 Party Pop</button>
+          <button type="button" class="vibe-chip" data-genre="Jazz" data-language="" data-extra="study focus instrumental">🍃 Chill Study</button>
+          <button type="button" class="vibe-chip" data-genre="EDM" data-language="" data-extra="workout gym pump up">🔥 Workout Hype</button>
+          <button type="button" class="vibe-chip" data-genre="R&amp;B" data-language="" data-extra="sad emotional heartbreak">💔 Sad Hour</button>
+          <button type="button" class="vibe-chip" data-genre="J-Pop" data-language="ja" data-extra="upbeat">🎌 J-Pop Energy</button>
+          <button type="button" class="vibe-chip" data-genre="K-Pop" data-language="ko" data-extra="hits">💜 K-Pop Bops</button>
+          <button type="button" class="vibe-chip" data-genre="Indie" data-language="" data-extra="rainy day cozy acoustic">🌧️ Rainy Day</button>
         </div>
         <div class="row">
           <div>
@@ -1228,8 +1342,12 @@
             </select>
           </div>
         </div>
-        <button class="fetch-btn" id="discoverBtn">🔍 Find Playlists</button>
-        <div class="status" id="discoverStatus"></div>
+        <div class="discover-btn-row">
+          <button class="fetch-btn" id="discoverBtn">🔍 Find Playlists</button>
+          <button class="fetch-btn secondary" id="libraryMatchBtn" type="button">🎯 More Like My Library</button>
+          <button class="fetch-btn secondary" id="surpriseMeBtn" type="button">🎲 Surprise Me</button>
+        </div>
+        <div class="status" id="discoverStatus" role="status" aria-live="polite"></div>
         <div id="discoverResults" class="discover-results"></div>
       </div>
 
@@ -1251,7 +1369,7 @@
       </div>
     </div>
     <button class="fetch-btn" id="fetchBtn">Fetch Video IDs</button>
-    <div class="status" id="statusMsg"></div>
+    <div class="status" id="statusMsg" role="status" aria-live="polite"></div>
   </div>
 
   <div class="help">
@@ -1305,6 +1423,20 @@
       </div>
     </div>
   </div>
+<div id="nowPlayingBar" class="now-playing-bar" hidden>
+  <img id="npThumb" class="np-thumb" src="" alt="">
+  <div class="np-info">
+    <div class="np-title" id="npTitle"></div>
+    <div class="np-artist" id="npArtist"></div>
+  </div>
+  <div class="np-controls">
+    <button type="button" id="npPrevBtn" class="np-btn" aria-label="Previous song">⏮</button>
+    <button type="button" id="npMuteBtn" class="np-btn" aria-label="Toggle sound">🔇</button>
+    <button type="button" id="npNextBtn" class="np-btn" aria-label="Next song">⏭</button>
+    <button type="button" id="npExpandBtn" class="np-btn np-expand" aria-label="Open full preview">⤢</button>
+  </div>
+</div>
+
 <script>
 if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
   window.addEventListener('load', () => {
@@ -1378,10 +1510,10 @@ const nowPicked = document.getElementById('nowPicked');
   const positions = new Float32Array(STAR_COUNT * 3);
   const colors = new Float32Array(STAR_COUNT * 3);
   const palette = [
-    [0.54, 0.36, 1.0],   // violet  (--accent)
-    [1.0, 0.17, 0.69],   // magenta (--accent-2)
-    [0.17, 0.91, 1.0],   // cyan    (--accent-3)
-    [1.0, 1.0, 1.0],     // white sparks
+    [0.54, 0.36, 1.0],
+    [1.0, 0.17, 0.69],
+    [0.17, 0.91, 1.0],
+    [1.0, 1.0, 1.0],
   ];
   for(let i = 0; i < STAR_COUNT; i++){
     positions[i*3]     = (Math.random() - 0.5) * 1800;
@@ -1484,6 +1616,37 @@ let previewSettleTimer = null;
 let previewMuted = true;
 let shuffleBag = [];
 
+const nowPlayingBar = document.getElementById('nowPlayingBar');
+const npThumb = document.getElementById('npThumb');
+const npTitle = document.getElementById('npTitle');
+const npArtist = document.getElementById('npArtist');
+const npMuteBtn = document.getElementById('npMuteBtn');
+
+function updateNowPlayingBar(){
+  const s = SONGS[activeIndex];
+  if(!s || !nowPlayingBar){
+    hideNowPlayingBar();
+    return;
+  }
+  npThumb.src = s.cover || '';
+  npThumb.alt = s.title || '';
+  npTitle.textContent = s.title || '';
+  npArtist.textContent = s.artist || '';
+  npMuteBtn.textContent = previewMuted ? '🔇' : '🔊';
+  nowPlayingBar.hidden = false;
+  requestAnimationFrame(()=> nowPlayingBar.classList.add('visible'));
+  document.body.classList.add('has-now-playing');
+}
+
+function hideNowPlayingBar(){
+  if(!nowPlayingBar) return;
+  nowPlayingBar.classList.remove('visible');
+  document.body.classList.remove('has-now-playing');
+  setTimeout(()=>{ if(!nowPlayingBar.classList.contains('visible')) nowPlayingBar.hidden = true; }, 350);
+}
+
+let activeIndex = 0;
+
 let audioUnlocked = false;
 function unlockPreviewAudio(){
   if(audioUnlocked) return;
@@ -1573,6 +1736,15 @@ if(songSearchInput){
   });
 }
 
+function stepToAdjacentCard(dir){
+  const visible = cards.filter(c => !c.classList.contains('filtered-out'));
+  if(!visible.length) return;
+  const currentPos = visible.indexOf(cards[activeIndex]);
+  const fallbackPos = currentPos === -1 ? 0 : currentPos;
+  const nextPos = (fallbackPos + dir + visible.length) % visible.length;
+  scrollToCard(visible[nextPos], true);
+}
+
 window.addEventListener('keydown', (e)=>{
   const tag = document.activeElement && document.activeElement.tagName;
   const typing = tag === 'INPUT' || tag === 'TEXTAREA';
@@ -1589,11 +1761,7 @@ window.addEventListener('keydown', (e)=>{
 
   if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
     e.preventDefault();
-    const currentPos = visible.indexOf(cards[activeIndex]);
-    const dir = e.key === 'ArrowRight' ? 1 : -1;
-    const fallbackPos = currentPos === -1 ? 0 : currentPos;
-    const nextPos = (fallbackPos + dir + visible.length) % visible.length;
-    scrollToCard(visible[nextPos], true);
+    stepToAdjacentCard(e.key === 'ArrowRight' ? 1 : -1);
   } else if(e.key === 'Enter'){
     e.preventDefault();
     const activeCard = cards[activeIndex];
@@ -1608,6 +1776,30 @@ window.addEventListener('keydown', (e)=>{
     if(!spinning) pickBtn.click();
   }
 });
+
+if(document.getElementById('npPrevBtn')){
+  document.getElementById('npPrevBtn').addEventListener('click', ()=> stepToAdjacentCard(-1));
+}
+if(document.getElementById('npNextBtn')){
+  document.getElementById('npNextBtn').addEventListener('click', ()=> stepToAdjacentCard(1));
+}
+if(npMuteBtn){
+  npMuteBtn.addEventListener('click', ()=>{
+    const activeCard = cards[activeIndex];
+    const cardMuteBtn = activeCard && activeCard.querySelector('.mute-btn');
+    if(cardMuteBtn) cardMuteBtn.click();
+    npMuteBtn.textContent = previewMuted ? '🔇' : '🔊';
+  });
+}
+if(document.getElementById('npExpandBtn')){
+  document.getElementById('npExpandBtn').addEventListener('click', ()=>{
+    const s = SONGS[activeIndex];
+    if(!s) return;
+    clearTimeout(previewSettleTimer);
+    stopInlinePreview();
+    openPreview(s.youtubeId, s.title, s.artist, s.cover);
+  });
+}
 
 function buildCard(s, i){
   const card = document.createElement('div');
@@ -1637,13 +1829,16 @@ function renderAllCards(){
   shuffleBag = [];
   track.innerHTML = '';
   if(SONGS.length === 0){
+    track.classList.add('is-empty');
     const empty = document.createElement('div');
     empty.className = 'track-empty';
     empty.textContent = 'No songs yet. Import a playlist or add songs to get started.';
     track.appendChild(empty);
     cards = [];
+    hideNowPlayingBar();
     return;
   }
+  track.classList.remove('is-empty');
   SONGS.forEach((s, i) => {
     track.appendChild(buildCard(s, i));
   });
@@ -1747,7 +1942,6 @@ function mergeImportedSongs(imported){
   return addedCount;
 }
 
-let activeIndex = 0;
 function updateCards(){
   const wrapRect = trackWrap.getBoundingClientRect();
   const centerX = wrapRect.left + wrapRect.width/2;
@@ -1777,6 +1971,7 @@ function updateCards(){
     if(s){
       nowPicked.innerHTML = `Active: <b>${s.title}</b> — ${s.artist}`;
     }
+    updateNowPlayingBar();
     clearTimeout(previewSettleTimer);
     stopInlinePreview();
     previewSettleTimer = setTimeout(()=>{ startInlinePreview(activeIndex); }, 600);
@@ -1917,6 +2112,7 @@ function announce(card){
 requestAnimationFrame(()=>{
   scrollToCard(cards[0], false);
   updateCards();
+  updateNowPlayingBar();
   clearTimeout(previewSettleTimer);
   previewSettleTimer = setTimeout(()=>{ startInlinePreview(activeIndex); }, 700);
 });
@@ -2109,6 +2305,7 @@ track.addEventListener('click', (e)=>{
       document.removeEventListener('keydown', unlockPreviewAudio);
     }
     muteBtn.textContent = previewMuted ? '🔇' : '🔊';
+    if(npMuteBtn) npMuteBtn.textContent = previewMuted ? '🔇' : '🔊';
     if(previewCardIndex !== null){
       const idx = previewCardIndex;
       previewCardIndex = null;
@@ -2330,7 +2527,7 @@ function renderResults(items){
             <td class="vid-title" title="${r.title.replace(/"/g,'&quot;')}">${r.title}</td>
             <td><span class="vid-id" data-id="${r.vid}">${r.vid}</span></td>
             <td><span class="vid-id thumb-url" data-thumb="${r.thumbHigh}">${r.thumbHigh}</span></td>
-            <td>${r.inLibrary ? '<span class="in-library-badge" title="Already in your library — will be skipped">✓ Added</span>' : ''}</td>
+            <td>${r.inLibrary ? '<span class="in-library-badge" title="Already in your library — will be skipped">✓ Added</span>' : `<button type="button" class="row-add-btn" data-vid="${r.vid}" data-title="${r.title.replace(/"/g,'&quot;')}" data-thumb="${r.thumbHigh}">+ Add</button>`}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -2343,16 +2540,10 @@ function renderResults(items){
 
   document.getElementById('sendToPickerBtn').addEventListener('click', () => {
     const merged = rows.map(r => {
-      let artist = 'Unknown Artist';
-      let title = r.title;
-      const dashSplit = r.title.split(/\s[-–]\s/);
-      if(dashSplit.length >= 2){
-        artist = dashSplit[0].trim();
-        title = dashSplit.slice(1).join(' - ').trim();
-      }
+      const parsed = parseArtistTitle(r.title);
       return {
-        title,
-        artist,
+        title: parsed.title,
+        artist: parsed.artist,
         cover: r.thumbHigh,
         youtubeId: r.vid
       };
@@ -2396,6 +2587,34 @@ function renderResults(items){
       setStatus(`Copied thumbnail URL.`, 'ok');
     });
   });
+  resultsWrap.querySelectorAll('.row-add-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const parsed = parseArtistTitle(btn.dataset.title);
+      const addedCount = mergeImportedSongs([{
+        title: parsed.title,
+        artist: parsed.artist,
+        cover: btn.dataset.thumb,
+        youtubeId: btn.dataset.vid
+      }]);
+      if(addedCount){
+        btn.outerHTML = '<span class="in-library-badge">✓ Added</span>';
+        setStatus(`Added "${parsed.title}" to Song Picker.`, 'ok');
+      } else {
+        setStatus('Already in your library.', 'ok');
+      }
+    });
+  });
+}
+
+function parseArtistTitle(rawTitle){
+  let artist = 'Unknown Artist';
+  let title = rawTitle;
+  const dashSplit = rawTitle.split(/\s[-–]\s/);
+  if(dashSplit.length >= 2){
+    artist = dashSplit[0].trim();
+    title = dashSplit.slice(1).join(' - ').trim();
+  }
+  return { artist, title };
 }
 
 function isUnavailableVideo(item){
@@ -2513,8 +2732,8 @@ discoverResults.addEventListener('click', (e)=>{
   if(!btn) return;
   playlistInput.value = btn.dataset.playlistId;
   playlistInput.scrollIntoView({ behavior:'smooth', block:'center' });
-  playlistInput.focus();
-  setDiscoverStatus('Playlist ID filled in below — click "Fetch Video IDs" to pull its songs.', 'ok');
+  setDiscoverStatus('Fetching that playlist\u2019s songs…', 'ok');
+  fetchBtn.click();
 });
 
 const LANGUAGE_META = {
@@ -2532,8 +2751,39 @@ const LANGUAGE_META = {
   id: { name: 'Indonesian', region: 'ID' },
 };
 
+const REACTION_TERMS = ['reaction', 'reacts', 'react to'];
+
+function isReactionContent(item){
+  const snip = item.snippet || {};
+  const haystack = `${snip.title || ''} ${snip.channelTitle || ''} ${snip.description || ''}`.toLowerCase();
+  return REACTION_TERMS.some(term => haystack.includes(term));
+}
+
+async function runDiscoverSearch(query, language, triggerBtn, triggerLabel){
+  const meta = LANGUAGE_META[language];
+  const apiKey = apiKeyInput.value.trim();
+  const fullQuery = `${query} -reaction -reacts`;
+
+  triggerBtn.disabled = true;
+  triggerBtn.innerHTML = `<span class="spinner"></span>Searching...`;
+  setDiscoverStatus('Searching YouTube for matching playlists…');
+  discoverResults.innerHTML = '';
+
+  try{
+    const items = await searchPlaylists(fullQuery, language, meta ? meta.region : '', apiKey);
+    const filtered = items.filter(item => !isReactionContent(item));
+    renderDiscoverResults(filtered);
+    setDiscoverStatus(`Found ${filtered.length} playlist${filtered.length===1?'':'s'}.`, filtered.length ? 'ok' : '');
+  }catch(err){
+    setDiscoverStatus('Error: ' + err.message, 'error');
+  }finally{
+    triggerBtn.disabled = false;
+    triggerBtn.innerHTML = triggerLabel;
+  }
+}
+
 if(discoverBtn){
-  discoverBtn.addEventListener('click', async ()=>{
+  discoverBtn.addEventListener('click', ()=>{
     const genre = discoverGenre.value.trim();
     const artist = discoverArtist.value.trim();
     const language = discoverLanguage.value;
@@ -2543,22 +2793,150 @@ if(discoverBtn){
     }
     const meta = LANGUAGE_META[language];
     const query = [genre, artist, meta ? meta.name : '', 'playlist'].filter(Boolean).join(' ');
+    runDiscoverSearch(query, language, discoverBtn, '🔍 Find Playlists');
+  });
+}
+
+const libraryMatchBtn = document.getElementById('libraryMatchBtn');
+
+function detectDominantLanguage(text){
+  const scores = { ja:0, zh:0, ko:0, th:0, hi:0 };
+  for(const ch of text){
+    const c = ch.codePointAt(0);
+    if(c>=0x3040 && c<=0x30FF) scores.ja += 2;
+    else if(c>=0x4E00 && c<=0x9FFF){ scores.ja += 1; scores.zh += 1; }
+    else if(c>=0xAC00 && c<=0xD7A3) scores.ko += 1;
+    else if(c>=0x0E00 && c<=0x0E7F) scores.th += 1;
+    else if(c>=0x0900 && c<=0x097F) scores.hi += 1;
+  }
+  let best = '', bestScore = 5;
+  for(const k of Object.keys(scores)){
+    if(scores[k] > bestScore){ best = k; bestScore = scores[k]; }
+  }
+  return best;
+}
+
+function pickLibrarySeedArtists(){
+  const counts = {};
+  SONGS.forEach(s => {
+    const name = (s.artist || '').trim();
+    if(!name || /^unknown artist$/i.test(name)) return;
+    counts[name] = (counts[name] || 0) + 1;
+  });
+  return Object.entries(counts)
+    .sort((a,b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([name]) => name);
+}
+
+if(libraryMatchBtn){
+  libraryMatchBtn.addEventListener('click', ()=>{
+    if(!SONGS.length){
+      setDiscoverStatus('Your library is empty — import or add some songs first.', 'error');
+      return;
+    }
+    const seedArtists = pickLibrarySeedArtists();
+    const combinedTitles = SONGS.map(s => s.title || '').join(' ');
+    const language = detectDominantLanguage(combinedTitles);
+    const meta = LANGUAGE_META[language];
+
+    if(!seedArtists.length){
+      setDiscoverStatus('Couldn\u2019t find identifiable artists in your library to match against — try Find Playlists instead.', 'error');
+      return;
+    }
+
+    discoverLanguage.value = language;
+    discoverArtist.value = seedArtists[0];
+    surpriseAutoFilled = false;
+
+    const query = [...seedArtists, meta ? meta.name : '', 'mix playlist'].filter(Boolean).join(' ');
+    setDiscoverStatus(`Based on artists in your library: ${seedArtists.join(', ')}${meta ? ` — leaning ${meta.name}` : ''}.`);
+    runDiscoverSearch(query, language, libraryMatchBtn, '🎯 More Like My Library');
+  });
+}
+
+const vibeChips = document.querySelectorAll('.vibe-chip');
+let surpriseAutoFilled = false;
+
+discoverGenre.addEventListener('change', ()=>{ surpriseAutoFilled = false; });
+discoverArtist.addEventListener('input', ()=>{ surpriseAutoFilled = false; });
+discoverLanguage.addEventListener('change', ()=>{ surpriseAutoFilled = false; });
+
+vibeChips.forEach(chip => {
+  chip.addEventListener('click', ()=>{
+    vibeChips.forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    surpriseAutoFilled = false;
+
+    const genre = chip.dataset.genre || '';
+    const language = chip.dataset.language || '';
+    const extra = chip.dataset.extra || '';
+    const meta = LANGUAGE_META[language];
+
+    discoverGenre.value = genre;
+    discoverLanguage.value = language;
+    discoverArtist.value = '';
+
+    const query = [genre, extra, meta ? meta.name : '', 'playlist'].filter(Boolean).join(' ');
+    runDiscoverSearch(query, language, discoverBtn, '🔍 Find Playlists');
+  });
+});
+
+const surpriseMeBtn = document.getElementById('surpriseMeBtn');
+if(surpriseMeBtn){
+  surpriseMeBtn.addEventListener('click', async ()=>{
+    const genre = discoverGenre.value.trim();
+    const artist = discoverArtist.value.trim();
+    let language = discoverLanguage.value;
+    let query;
+
+    if((genre || artist) && !surpriseAutoFilled){
+      const meta = LANGUAGE_META[language];
+      query = [genre, artist, meta ? meta.name : '', 'playlist'].filter(Boolean).join(' ');
+    } else {
+      const randomChip = vibeChips[Math.floor(Math.random() * vibeChips.length)];
+      language = randomChip.dataset.language || '';
+      const meta = LANGUAGE_META[language];
+      query = [randomChip.dataset.genre, randomChip.dataset.extra, meta ? meta.name : '', 'playlist'].filter(Boolean).join(' ');
+      discoverGenre.value = randomChip.dataset.genre || '';
+      discoverLanguage.value = language;
+      discoverArtist.value = '';
+      surpriseAutoFilled = true;
+      vibeChips.forEach(c => c.classList.remove('active'));
+      randomChip.classList.add('active');
+    }
+
+    const meta = LANGUAGE_META[language];
     const apiKey = apiKeyInput.value.trim();
 
-    discoverBtn.disabled = true;
-    discoverBtn.innerHTML = `<span class="spinner"></span>Searching...`;
-    setDiscoverStatus('Searching YouTube for matching playlists…');
+    surpriseMeBtn.disabled = true;
+    surpriseMeBtn.innerHTML = `<span class="spinner"></span>Rolling the dice...`;
+    setDiscoverStatus('Finding something to surprise you with…');
     discoverResults.innerHTML = '';
 
     try{
-      const items = await searchPlaylists(query, language, meta ? meta.region : '', apiKey);
-      renderDiscoverResults(items);
-      setDiscoverStatus(`Found ${items.length} playlist${items.length===1?'':'s'}.`, items.length ? 'ok' : '');
+      const fullQuery = `${query} -reaction -reacts`;
+      const items = await searchPlaylists(fullQuery, language, meta ? meta.region : '', apiKey);
+      const filtered = items.filter(item => !isReactionContent(item) && item.id && item.id.playlistId);
+
+      if(!filtered.length){
+        setDiscoverStatus('Couldn\u2019t find anything to surprise you with — try again or adjust your filters.', 'error');
+        return;
+      }
+
+      const pick = filtered[Math.floor(Math.random() * filtered.length)];
+      const snip = pick.snippet || {};
+      const pid = pick.id.playlistId;
+
+      playlistInput.value = pid;
+      playlistInput.scrollIntoView({ behavior:'smooth', block:'center' });
+      setDiscoverStatus(`🎲 Surprised you with "${snip.title || 'a playlist'}" by ${snip.channelTitle || 'someone'} — fetching its songs…`, 'ok');
+      fetchBtn.click();
     }catch(err){
       setDiscoverStatus('Error: ' + err.message, 'error');
     }finally{
-      discoverBtn.disabled = false;
-      discoverBtn.textContent = '🔍 Find Playlists';
+      surpriseMeBtn.disabled = false;
+      surpriseMeBtn.innerHTML = '🎲 Surprise Me';
     }
   });
 }
