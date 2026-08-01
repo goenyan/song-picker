@@ -4,6 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Song Picker</title>
+<meta name="description" content="Spin the slide, pick the track. A 3D reel song picker with YouTube previews, playlist import, and genre/artist/language discovery.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Song Picker">
+<meta property="og:title" content="Song Picker — Spin the Slide, Pick the Track">
+<meta property="og:description" content="A 3D reel song picker with YouTube previews, playlist import, and genre/artist/language discovery.">
+<meta property="og:url" content="https://song-picker.mimiakane.com/">
+<meta property="og:image" content="https://song-picker.mimiakane.com/icons/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Song Picker — Spin the Slide, Pick the Track">
+<meta name="twitter:description" content="A 3D reel song picker with YouTube previews, playlist import, and genre/artist/language discovery.">
+<meta name="twitter:image" content="https://song-picker.mimiakane.com/icons/og-image.png">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%238a5cff'/%3E%3Cstop offset='55%25' stop-color='%23ff2bb0'/%3E%3Cstop offset='100%25' stop-color='%232be8ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%230b0a12'/%3E%3Ccircle cx='32' cy='32' r='24' fill='url(%23g)'/%3E%3Cpath d='M26 21 L45 32 L26 43 Z' fill='%230b0a12'/%3E%3C/svg%3E">
 
 <link rel="manifest" href="manifest.json">
@@ -570,6 +583,17 @@
   .card:hover .play-btn, .card.active .play-btn{
     opacity:1;transform:scale(1);
   }
+  .card.autoplay-blocked .play-btn{
+    opacity:1;
+    animation:autoplayPrompt 1.4s ease-in-out infinite;
+  }
+  @keyframes autoplayPrompt{
+    0%,100%{transform:scale(1); box-shadow:0 0 0 0 rgba(43,232,255,.5);}
+    50%{transform:scale(1.08); box-shadow:0 0 0 10px rgba(43,232,255,0);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .card.autoplay-blocked .play-btn{animation:none;}
+  }
   .play-btn:hover{
     background:linear-gradient(120deg, var(--accent-3), var(--accent));
     color:#0a0a12;
@@ -820,10 +844,22 @@
     display:flex;align-items:center;justify-content:space-between;
     margin-bottom:18px;
   }
+  .queue-head-left{display:flex; align-items:center; gap:12px;}
   .queue-head h2{
     font-family:'Space Grotesk', sans-serif;
     font-size:20px;margin:0;font-weight:600;
   }
+  .queue-share-btn{
+    font-size:12px;font-weight:600;
+    color:var(--accent-3);
+    background:rgba(43,232,255,.08);
+    border:1px solid rgba(43,232,255,.3);
+    padding:6px 12px;border-radius:100px;
+    cursor:pointer;
+    transition:all .2s ease;
+  }
+  .queue-share-btn:hover{background:rgba(43,232,255,.16);}
+  .queue-share-btn:disabled{opacity:.5;cursor:default;}
   .queue-count{
     font-size:13px;color:var(--muted);
     background:rgba(255,255,255,.05);
@@ -1133,13 +1169,14 @@
     margin-bottom:14px;flex-wrap:wrap;gap:10px;
   }
   .results-head h2{font-family:'Space Grotesk', sans-serif;font-size:18px;margin:0;}
-  .actions{display:flex;gap:10px;}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;}
   .action-btn{
     font-size:13px;font-weight:600;color:var(--text);
     background:rgba(255,255,255,.06);
     border:1px solid rgba(255,255,255,.15);
     padding:9px 18px;border-radius:100px;
     cursor:pointer;transition:all .2s ease;
+    white-space:nowrap;
   }
   .action-btn:hover{background:rgba(255,255,255,.12);}
   .primary-action{
@@ -1152,6 +1189,11 @@
 
   table{
     width:100%;border-collapse:collapse;font-size:13.5px;
+  }
+  .results-table-scroll{
+    width:100%;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
   }
   thead th{
     text-align:left;color:var(--muted);font-weight:500;
@@ -1173,6 +1215,12 @@
   }
   .thumb-url{
     max-width:220px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;
+  }
+  @media (max-width: 640px){
+    table{font-size:12.5px;}
+    thead th:nth-child(5), tbody td:nth-child(5){display:none;}
+    .vid-title{max-width:150px;}
+    tbody td{padding:8px;}
   }
   .vid-id:hover{background:rgba(92,214,255,.18);}
   .copy-hint{font-size:11px;color:var(--muted);}
@@ -1388,7 +1436,10 @@
 
   <section class="queue-section">
     <div class="queue-head">
-      <h2>Queue</h2>
+      <div class="queue-head-left">
+        <h2>Queue</h2>
+        <button type="button" class="queue-share-btn" id="shareQueueBtn">🔗 Share</button>
+      </div>
       <span class="queue-count" id="queueCount">0 songs</span>
     </div>
     <div class="queue-list" id="queueList">
@@ -1996,9 +2047,12 @@ function startInlinePreview(index){
   iframe.className = 'cover-preview';
   iframe.src = `https://www.youtube.com/embed/${encodeURIComponent(song.youtubeId)}?autoplay=1&mute=${previewMuted ? 1 : 0}&rel=0&modestbranding=1&playsinline=1&controls=0&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
   iframe.title = `${song.title} preview`;
-  iframe.setAttribute('allow', 'autoplay; encrypted-media');
+  iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
+  iframe.setAttribute('playsinline', '1');
+  iframe.setAttribute('webkit-playsinline', '1');
   iframe.setAttribute('frameborder', '0');
   iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+  iframe.dataset.autoplayConfirmed = 'false';
   iframe.addEventListener('load', ()=>{
     iframe.classList.add('ready');
     try{
@@ -2008,17 +2062,27 @@ function startInlinePreview(index){
 
   cover.appendChild(iframe);
   card.classList.add('previewing');
+  card.classList.remove('autoplay-blocked');
   const muteBtn = card.querySelector('.mute-btn');
   if(muteBtn) muteBtn.textContent = previewMuted ? '🔇' : '🔊';
 
   previewIframe = iframe;
   previewCardIndex = index;
+
+  setTimeout(()=>{
+    if(iframe === previewIframe && iframe.dataset.autoplayConfirmed !== 'true'){
+      card.classList.add('autoplay-blocked');
+    }
+  }, 2500);
 }
 
 function stopInlinePreview(){
   if(previewCardIndex !== null){
     const prevCard = cards[previewCardIndex];
-    if(prevCard) prevCard.classList.remove('previewing');
+    if(prevCard){
+      prevCard.classList.remove('previewing');
+      prevCard.classList.remove('autoplay-blocked');
+    }
   }
   if(previewIframe){
     previewIframe.src = 'about:blank';
@@ -2040,6 +2104,16 @@ window.addEventListener('message', (event)=>{
   let data;
   try{ data = JSON.parse(event.data); }catch(e){ return; }
   if(!data || data.event !== 'infoDelivery' || !data.info || typeof data.info.playerState === 'undefined') return;
+
+  if(data.info.playerState === 1 && previewIframe && event.source === previewIframe.contentWindow){
+    previewIframe.dataset.autoplayConfirmed = 'true';
+    if(previewCardIndex !== null){
+      const playingCard = cards[previewCardIndex];
+      if(playingCard) playingCard.classList.remove('autoplay-blocked');
+    }
+    return;
+  }
+
   if(data.info.playerState !== 0) return;
 
   if(previewIframe && event.source === previewIframe.contentWindow){
@@ -2419,6 +2493,70 @@ queueList.addEventListener('click', (e)=>{
   renderQueue();
 });
 
+function encodeQueueForShare(items){
+  const compact = items.map(item => [item.youtubeId, item.title, item.artist]);
+  const json = JSON.stringify(compact);
+  return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function decodeQueueFromShare(encoded){
+  try{
+    const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '='.repeat((4 - base64.length % 4) % 4);
+    const json = decodeURIComponent(escape(atob(padded)));
+    const compact = JSON.parse(json);
+    if(!Array.isArray(compact)) return null;
+    return compact.map(([youtubeId, title, artist]) => ({
+      youtubeId,
+      title: title || 'Untitled',
+      artist: artist || 'Unknown Artist',
+      cover: `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`,
+    })).filter(item => !!item.youtubeId);
+  }catch(e){
+    return null;
+  }
+}
+
+const shareQueueBtn = document.getElementById('shareQueueBtn');
+if(shareQueueBtn){
+  shareQueueBtn.addEventListener('click', async ()=>{
+    if(!queue.length){
+      nowPicked.textContent = 'Your queue is empty — add some songs first.';
+      return;
+    }
+    const encoded = encodeQueueForShare(queue);
+    const shareUrl = `${location.origin}${location.pathname}?queue=${encoded}`;
+    try{
+      await navigator.clipboard.writeText(shareUrl);
+      const original = shareQueueBtn.textContent;
+      shareQueueBtn.textContent = '✓ Link copied!';
+      shareQueueBtn.disabled = true;
+      setTimeout(()=>{
+        shareQueueBtn.textContent = original;
+        shareQueueBtn.disabled = false;
+      }, 2200);
+    }catch(e){
+      nowPicked.textContent = shareUrl;
+    }
+  });
+}
+
+(function loadSharedQueueFromUrl(){
+  const params = new URLSearchParams(location.search);
+  const encoded = params.get('queue');
+  if(!encoded) return;
+  const shared = decodeQueueFromShare(encoded);
+  if(!shared || !shared.length) return;
+  shared.forEach(item => {
+    queueSeq++;
+    queue.push({ ...item, qid: queueSeq });
+  });
+  nowPicked.innerHTML = `Loaded a shared queue of <b>${shared.length}</b> song${shared.length===1?'':'s'}.`;
+  params.delete('queue');
+  const cleanUrl = location.pathname + (params.toString() ? `?${params.toString()}` : '');
+  history.replaceState(null, '', cleanUrl);
+})();
+
 renderQueue();
 
 const apiKeyInput = document.getElementById('apiKey');
@@ -2517,21 +2655,23 @@ function renderResults(items){
         <button class="action-btn primary-action" id="sendToPickerBtn">🎵 Send to Song Picker</button>
       </div>
     </div>
-    <table>
-      <thead><tr><th>#</th><th>Thumb</th><th>Title</th><th>Video ID</th><th>Thumbnail URL</th><th></th></tr></thead>
-      <tbody>
-        ${rows.map(r => `
-          <tr class="${r.inLibrary ? 'row-in-library' : ''}">
-            <td>${r.i}</td>
-            <td><img class="thumb" src="${r.thumbMedium}" alt=""></td>
-            <td class="vid-title" title="${r.title.replace(/"/g,'&quot;')}">${r.title}</td>
-            <td><span class="vid-id" data-id="${r.vid}">${r.vid}</span></td>
-            <td><span class="vid-id thumb-url" data-thumb="${r.thumbHigh}">${r.thumbHigh}</span></td>
-            <td>${r.inLibrary ? '<span class="in-library-badge" title="Already in your library — will be skipped">✓ Added</span>' : `<button type="button" class="row-add-btn" data-vid="${r.vid}" data-title="${r.title.replace(/"/g,'&quot;')}" data-thumb="${r.thumbHigh}">+ Add</button>`}</td>
-          </tr>
-        `).join('')}
+    <div class="results-table-scroll">
+      <table>
+        <thead><tr><th>#</th><th>Thumb</th><th>Title</th><th>Video ID</th><th>Thumbnail URL</th><th></th></tr></thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr class="${r.inLibrary ? 'row-in-library' : ''}">
+              <td>${r.i}</td>
+              <td><img class="thumb" src="${r.thumbMedium}" alt=""></td>
+              <td class="vid-title" title="${r.title.replace(/"/g,'&quot;')}">${r.title}</td>
+              <td><span class="vid-id" data-id="${r.vid}">${r.vid}</span></td>
+              <td><span class="vid-id thumb-url" data-thumb="${r.thumbHigh}">${r.thumbHigh}</span></td>
+              <td>${r.inLibrary ? '<span class="in-library-badge" title="Already in your library — will be skipped">✓ Added</span>' : `<button type="button" class="row-add-btn" data-vid="${r.vid}" data-title="${r.title.replace(/"/g,'&quot;')}" data-thumb="${r.thumbHigh}">+ Add</button>`}</td>
+            </tr>
+          `).join('')}
       </tbody>
-    </table>
+      </table>
+    </div>
     <div style="margin-top:20px;">
       <label>Raw list (one ID per line)</label>
       <textarea readonly>${idsOnly}</textarea>
