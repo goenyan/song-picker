@@ -906,6 +906,43 @@
     font-size:12px;color:var(--muted);
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
+  .queue-item .qplay{
+    width:30px;height:30px;border-radius:50%;
+    border:1px solid rgba(43,232,255,.3);
+    background:rgba(43,232,255,.08);
+    color:var(--accent-3);
+    font-size:11px;
+    cursor:pointer;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    transition:all .2s ease;
+  }
+  .queue-item .qplay:hover{
+    background:rgba(43,232,255,.2);
+    border-color:var(--accent-3);
+  }
+  .queue-item .qadd{
+    width:30px;height:30px;border-radius:50%;
+    border:1px solid rgba(138,92,255,.35);
+    background:rgba(138,92,255,.1);
+    color:var(--accent);
+    font-size:15px;font-weight:700;
+    cursor:pointer;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    transition:all .2s ease;
+  }
+  .queue-item .qadd:hover{
+    background:rgba(138,92,255,.22);
+    border-color:var(--accent);
+  }
+  .queue-item .qin-library{
+    width:30px;height:30px;border-radius:50%;
+    border:1px solid rgba(43,232,255,.25);
+    background:rgba(43,232,255,.08);
+    color:var(--accent-3);
+    font-size:12px;
+    flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
   .queue-item .qremove{
     width:30px;height:30px;border-radius:50%;
     border:1px solid rgba(255,255,255,.12);
@@ -2458,6 +2495,7 @@ function renderQueue(){
   queue.forEach((item, i) => {
     const row = document.createElement('div');
     row.className = 'queue-item';
+    const inLibrary = SONGS.some(s => s.youtubeId === item.youtubeId);
     row.innerHTML = `
       <div class="qnum">${i+1}</div>
       <img src="${item.cover}" alt="${item.title} cover">
@@ -2465,6 +2503,11 @@ function renderQueue(){
         <div class="qtitle">${item.title}</div>
         <div class="qartist">${item.artist}</div>
       </div>
+      <button class="qplay" data-qid="${item.qid}" aria-label="Play">▶</button>
+      ${inLibrary
+        ? '<span class="qin-library" title="Already in your library">✓</span>'
+        : `<button class="qadd" data-qid="${item.qid}" aria-label="Add to library">+</button>`
+      }
       <button class="qremove" data-qid="${item.qid}" aria-label="Remove">✕</button>
     `;
     queueList.appendChild(row);
@@ -2486,6 +2529,35 @@ submitBtn.addEventListener('click', ()=>{
 });
 
 queueList.addEventListener('click', (e)=>{
+  const playBtn = e.target.closest('.qplay');
+  if(playBtn){
+    const qid = Number(playBtn.dataset.qid);
+    const item = queue.find(q => q.qid === qid);
+    if(item){
+      clearTimeout(previewSettleTimer);
+      stopInlinePreview();
+      openPreview(item.youtubeId, item.title, item.artist, item.cover);
+    }
+    return;
+  }
+  const addBtn = e.target.closest('.qadd');
+  if(addBtn){
+    const qid = Number(addBtn.dataset.qid);
+    const item = queue.find(q => q.qid === qid);
+    if(item){
+      const addedCount = mergeImportedSongs([{
+        title: item.title,
+        artist: item.artist,
+        cover: item.cover,
+        youtubeId: item.youtubeId
+      }]);
+      if(addedCount){
+        nowPicked.innerHTML = `Added <b>${item.title}</b> to your library.`;
+      }
+      renderQueue();
+    }
+    return;
+  }
   const btn = e.target.closest('.qremove');
   if(!btn) return;
   const qid = Number(btn.dataset.qid);
